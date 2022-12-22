@@ -1,0 +1,21 @@
+{
+  "version": "0.0.0",
+  "name": "@kmamal/gpu",
+  "description": "gpu",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:kmamal/gpu.git"
+  },
+  "main": "src/index.js",
+  "scripts": {
+    "test": "./scripts/run-tests.sh",
+    "update-exports": "node ./scripts/update-exports.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@kmamal/util": "^0.1.6"
+  },
+  "devDependencies": {
+    "@kmamal/testing": "^0.0.20"
+  }
+}
