@@ -1,3 +1,7 @@
+//
+// Based on [this article](https://web.dev/gpu-compute/) written by [François Beaufort](https://github.com/beaufortfrancois)
+//
+
 import gpu from '@kmamal/gpu'
 import Fs from 'node:fs'
 import Path from 'node:path'
