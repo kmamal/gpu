@@ -10,7 +10,7 @@
 WebGPU for Node.js via [Google Dawn](https://dawn.googlesource.com/dawn/+/refs/heads/main/src/dawn/node/).
 Allows you to use WebGPU without having to use a browser.
 
-Check the [examples](https://github.com/kmamal/node-sdl/tree/master/examples) for how to use this package. You can use both [compute](https://github.com/kmamal/node-sdl/tree/master/examples/00-compute), and [render](https://github.com/kmamal/node-sdl/tree/master/examples/01-render) pipelines, just note that there's no surface to display the render result on, so you have to read it out into a buffer to use it.
+Check the [examples](https://github.com/kmamal/gpu/tree/master/examples) for how to use this package. You can use both [compute](https://github.com/kmamal/gpu/tree/master/examples/00-compute), and [render](https://github.com/kmamal/gpu/tree/master/examples/01-render) pipelines, but for render pipelines there's of course no surface to display the result on, so you have to read it out into a buffer to use it.
 
 It should work on Linux, Mac, and Windows. Prebuilt binaries are available for x64 architectures, and arm-based Macs.
 

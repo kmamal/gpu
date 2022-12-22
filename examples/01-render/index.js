@@ -56,26 +56,26 @@ const colorBuffer = createBuffer(colors, gpu.BufferUsage.VERTEX)
 const indexBuffer = createBuffer(indices, gpu.BufferUsage.INDEX)
 
 const vertexShader = `
-		struct VSOut {
-			@builtin(position) Position: vec4<f32>,
-			@location(0) color: vec3<f32>,
-		};
+	struct VSOut {
+		@builtin(position) Position: vec4<f32>,
+		@location(0) color: vec3<f32>,
+	};
 
-		@vertex
-		fn main(@location(0) inPos: vec3<f32>, @location(1) inColor: vec3<f32> ) -> VSOut {
-			var vsOut: VSOut;
-			vsOut.Position = vec4<f32>(inPos, 1.0);
-			vsOut.color = inColor;
-			return vsOut;
-		}
-	`
+	@vertex
+	fn main(@location(0) inPos: vec3<f32>, @location(1) inColor: vec3<f32> ) -> VSOut {
+		var vsOut: VSOut;
+		vsOut.Position = vec4<f32>(inPos, 1.0);
+		vsOut.color = inColor;
+		return vsOut;
+	}
+`
 
 const fragmentShader = `
-		@fragment
-		fn main(@location(0) inColor: vec3<f32>) -> @location(0) vec4<f32> {
-			return vec4<f32>(inColor, 1.0);
-		}
-	`
+	@fragment
+	fn main(@location(0) inColor: vec3<f32>) -> @location(0) vec4<f32> {
+		return vec4<f32>(inColor, 1.0);
+	}
+`
 
 const pipeline = device.createRenderPipeline({
 	layout: 'auto',
