@@ -1,5 +1,7 @@
-scripts
-	**/*.test.js
-	**/testing/
-	**/_*
-	package.json~
+.github
+.eslintrc.js
+depot_tools
+dawn
+build
+dist
+publish

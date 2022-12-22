@@ -1,5 +1,5 @@
 {
-  "version": "0.0.0",
+  "version": "0.0.1",
   "name": "@kmamal/gpu",
   "description": "gpu",
   "repository": {
@@ -8,14 +8,29 @@
   },
   "main": "src/index.js",
   "scripts": {
-    "test": "./scripts/run-tests.sh",
-    "update-exports": "node ./scripts/update-exports.mjs"
+    "test": "cd scripts && node test.mjs",
+    "install": "cd scripts && node install.mjs",
+    "download-release": "cd scripts && node download-release.mjs",
+    "build": "cd scripts && node build.mjs",
+    "download-depot-tools": "cd scripts && node download-depot-tools.mjs",
+    "download-dawn": "cd scripts && node download-dawn.mjs",
+    "configure": "cd scripts && node configure.mjs",
+    "make": "cd scripts && node make.mjs",
+    "upload-release": "cd scripts && node upload-release.mjs",
+    "release": "cd scripts && node release.mjs",
+    "clean": "cd scripts && node clean.mjs",
+    "install-deps-ubuntu": "./scripts/install-deps-ubuntu.sh"
   },
   "license": "MIT",
   "dependencies": {
-    "@kmamal/util": "^0.1.6"
+    "tar": "^6.1.13"
   },
-  "devDependencies": {
-    "@kmamal/testing": "^0.0.20"
+  "depotTools": {
+    "url": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
+    "commit": "cf31045b347e24e6619f2564fdb0c2490f661745"
+  },
+  "dawn": {
+    "url": "https://dawn.googlesource.com/dawn",
+    "commit": "906fc9df206d668191e9660a16688e27eb3d97ce"
   }
 }
