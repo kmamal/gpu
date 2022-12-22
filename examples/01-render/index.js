@@ -1,5 +1,9 @@
 import gpu from '@kmamal/gpu'
 import sdl from '@kmamal/sdl'
+import Fs from 'node:fs'
+import Path from 'node:path'
+import { fileURLToPath } from 'node:url'
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 const window = sdl.video.createWindow({ accelerated: false })
 const { width, height } = window
@@ -55,32 +59,16 @@ const positionBuffer = createBuffer(positions, gpu.BufferUsage.VERTEX)
 const colorBuffer = createBuffer(colors, gpu.BufferUsage.VERTEX)
 const indexBuffer = createBuffer(indices, gpu.BufferUsage.INDEX)
 
-const vertexShader = `
-	struct VSOut {
-		@builtin(position) Position: vec4<f32>,
-		@location(0) color: vec3<f32>,
-	};
+const vertexShaderFile = Path.join(__dirname, 'vertex.wgsl')
+const vertexShaderCode = await Fs.promises.readFile(vertexShaderFile, 'utf8')
 
-	@vertex
-	fn main(@location(0) inPos: vec3<f32>, @location(1) inColor: vec3<f32> ) -> VSOut {
-		var vsOut: VSOut;
-		vsOut.Position = vec4<f32>(inPos, 1.0);
-		vsOut.color = inColor;
-		return vsOut;
-	}
-`
-
-const fragmentShader = `
-	@fragment
-	fn main(@location(0) inColor: vec3<f32>) -> @location(0) vec4<f32> {
-		return vec4<f32>(inColor, 1.0);
-	}
-`
+const fragmentShaderFile = Path.join(__dirname, 'fragment.wgsl')
+const fragmentShaderCode = await Fs.promises.readFile(fragmentShaderFile, 'utf8')
 
 const pipeline = device.createRenderPipeline({
 	layout: 'auto',
 	vertex: {
-		module: device.createShaderModule({ code: vertexShader }),
+		module: device.createShaderModule({ code: vertexShaderCode }),
 		entryPoint: 'main',
 		buffers: [
 			{
@@ -108,7 +96,7 @@ const pipeline = device.createRenderPipeline({
 		],
 	},
 	fragment: {
-		module: device.createShaderModule({ code: fragmentShader }),
+		module: device.createShaderModule({ code: fragmentShaderCode }),
 		entryPoint: 'main',
 		targets: [ { format: 'rgba8unorm' } ],
 	},
@@ -149,3 +137,5 @@ device.queue.submit([ commandEncoder.finish() ])
 await readBuffer.mapAsync(gpu.MapMode.READ)
 const resultBuffer = new Uint8Array(readBuffer.getMappedRange())
 window.render(width, height, width * 4, 'rgba32', Buffer.from(resultBuffer))
+
+device.destroy()

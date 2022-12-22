@@ -1,5 +1,6 @@
 .github
 .eslintrc.js
+examples
 depot_tools
 dawn
 build
