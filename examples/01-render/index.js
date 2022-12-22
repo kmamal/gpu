@@ -4,8 +4,8 @@
 
 import gpu from '@kmamal/gpu'
 import sdl from '@kmamal/sdl'
-import Fs from 'node:fs'
-import Path from 'node:path'
+import fs from 'node:fs'
+import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
@@ -63,11 +63,11 @@ const positionBuffer = createBuffer(positions, gpu.BufferUsage.VERTEX)
 const colorBuffer = createBuffer(colors, gpu.BufferUsage.VERTEX)
 const indexBuffer = createBuffer(indices, gpu.BufferUsage.INDEX)
 
-const vertexShaderFile = Path.join(__dirname, 'vertex.wgsl')
-const vertexShaderCode = await Fs.promises.readFile(vertexShaderFile, 'utf8')
+const vertexShaderFile = path.join(__dirname, 'vertex.wgsl')
+const vertexShaderCode = await fs.promises.readFile(vertexShaderFile, 'utf8')
 
-const fragmentShaderFile = Path.join(__dirname, 'fragment.wgsl')
-const fragmentShaderCode = await Fs.promises.readFile(fragmentShaderFile, 'utf8')
+const fragmentShaderFile = path.join(__dirname, 'fragment.wgsl')
+const fragmentShaderCode = await fs.promises.readFile(fragmentShaderFile, 'utf8')
 
 const pipeline = device.createRenderPipeline({
 	layout: 'auto',

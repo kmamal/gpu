@@ -3,8 +3,8 @@
 //
 
 import gpu from '@kmamal/gpu'
-import Fs from 'node:fs'
-import Path from 'node:path'
+import fs from 'node:fs'
+import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
@@ -55,8 +55,8 @@ const gpuReadBuffer = device.createBuffer({
 	usage: gpu.BufferUsage.COPY_DST | gpu.BufferUsage.MAP_READ,
 })
 
-const computeShaderFile = Path.join(__dirname, 'compute.wgsl')
-const computeShaderCode = await Fs.promises.readFile(computeShaderFile, 'utf8')
+const computeShaderFile = path.join(__dirname, 'compute.wgsl')
+const computeShaderCode = await fs.promises.readFile(computeShaderFile, 'utf8')
 
 const computePipeline = device.createComputePipeline({
 	layout: 'auto',

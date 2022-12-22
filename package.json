@@ -1,7 +1,15 @@
 {
   "version": "0.0.1",
   "name": "@kmamal/gpu",
-  "description": "gpu",
+  "description": "WebGPU for Node.js via Google Dawn",
+  "keywords": [
+    "webgpu",
+    "gpu",
+    "shader",
+    "compute",
+    "dawn"
+  ],
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git@github.com:kmamal/gpu.git"
@@ -21,7 +29,6 @@
     "clean": "cd scripts && node clean.mjs",
     "install-deps-ubuntu": "./scripts/install-deps-ubuntu.sh"
   },
-  "license": "MIT",
   "dependencies": {
     "tar": "^6.1.13"
   },
