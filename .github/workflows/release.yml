@@ -24,7 +24,9 @@ jobs:
 
     steps:
       - shell: bash
-        run: find / -name lib.exe -o -name lld-link.exe
+        run: |
+          find "/c/Program Files" -name lib.exe -o -name lld-link.exe
+          find "/c/Program Files (x86)" -name lib.exe -o -name lld-link.exe
       # - uses: actions/checkout@v3
 
       # - if: ${{ startsWith(matrix.platform.os, 'ubuntu-') }}
