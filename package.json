@@ -1,5 +1,5 @@
 {
-  "version": "0.0.2",
+  "version": "0.0.3",
   "name": "@kmamal/gpu",
   "description": "WebGPU for Node.js via Google Dawn",
   "keywords": [
