@@ -17,7 +17,6 @@
   "main": "./src/index.js",
   "exports": "./src/index.js",
   "scripts": {
-    "test": "cd scripts && node test.mjs",
     "install": "cd scripts && node install.mjs",
     "download-release": "cd scripts && node download-release.mjs",
     "build": "cd scripts && node build.mjs",
