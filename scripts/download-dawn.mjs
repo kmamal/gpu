@@ -1,5 +1,5 @@
-import Fs from 'node:fs'
-import { execSync } from 'node:child_process'
+import Fs from 'fs'
+import { execSync } from 'child_process'
 import C from './util/common.js'
 
 console.log("clone", C.dawn.url)

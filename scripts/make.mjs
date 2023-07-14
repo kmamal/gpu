@@ -1,6 +1,6 @@
-import Fs from 'node:fs'
-import Path from 'node:path'
-import { execSync } from 'node:child_process'
+import Fs from 'fs'
+import Path from 'path'
+import { execSync } from 'child_process'
 import C from './util/common.js'
 
 console.log("build in", C.dir.build)

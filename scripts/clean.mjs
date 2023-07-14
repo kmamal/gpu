@@ -1,5 +1,5 @@
-import Fs from 'node:fs'
-import Path from 'node:path'
+import Fs from 'fs'
+import Path from 'path'
 import C from './util/common.js'
 
 const dirs = [

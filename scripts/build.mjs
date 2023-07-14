@@ -1,4 +1,4 @@
-import Fs from 'node:fs'
+import Fs from 'fs'
 import C from './util/common.js'
 
 await Promise.all([
