@@ -26,11 +26,15 @@ jobs:
       - uses: actions/checkout@v3
 
       - if: ${{ startsWith(matrix.platform.os, 'ubuntu-') }}
-        run: npm run install-deps-ubuntu
+        run: scripts/install-deps-ubuntu.sh
+
+      - if: ${{ startsWith(matrix.platform.os, 'macos-') }}
+        run: scripts/install-deps-mac.sh
 
       - if: ${{ startsWith(matrix.platform.os, 'windows-') }}
         shell: bash
         run: |
+          scripts/install-deps-windows.cmd
           echo '${{ env.MSVC }}/bin/Hostx64/x64' >> $GITHUB_PATH
           echo '${{ env.WINSDK }}/bin/${{ env.WINSDK_VERSION }}/x64' >> $GITHUB_PATH
           LIB="${{ env.WINSDK }}/Lib/${{ env.WINSDK_VERSION }}/um/x64"

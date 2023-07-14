@@ -14,7 +14,8 @@
     "type": "git",
     "url": "git@github.com:kmamal/gpu.git"
   },
-  "main": "src/index.js",
+  "main": "./src/index.js",
+  "exports": "./src/index.js",
   "scripts": {
     "test": "cd scripts && node test.mjs",
     "install": "cd scripts && node install.mjs",
@@ -26,18 +27,17 @@
     "make": "cd scripts && node make.mjs",
     "upload-release": "cd scripts && node upload-release.mjs",
     "release": "cd scripts && node release.mjs",
-    "clean": "cd scripts && node clean.mjs",
-    "install-deps-ubuntu": "./scripts/install-deps-ubuntu.sh"
+    "clean": "cd scripts && node clean.mjs"
   },
   "dependencies": {
-    "tar": "^6.1.13"
+    "tar": "^6.1.15"
   },
   "depotTools": {
     "url": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
-    "commit": "cf31045b347e24e6619f2564fdb0c2490f661745"
+    "commit": "b7e16d28f692c28dfa5b0886aa7a9beba51c2b69"
   },
   "dawn": {
     "url": "https://dawn.googlesource.com/dawn",
-    "commit": "906fc9df206d668191e9660a16688e27eb3d97ce"
+    "commit": "d531a534629ce24f83df010b06ec549f4a9ff8bc"
   }
 }
