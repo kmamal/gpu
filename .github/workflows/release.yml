@@ -4,7 +4,7 @@ on: workflow_dispatch
 
 env:
   # NOTE: MSVC version changes constantly
-  MSVC: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.36.32532
+  MSVC: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.37.32822
   WINSDK: C:/Program Files (x86)/Windows Kits/10
   WINSDK_VERSION: 10.0.22621.0
 
@@ -40,8 +40,6 @@ jobs:
       - if: ${{ startsWith(matrix.platform.os, 'windows-') }}
         shell: bash
         run: |
-          ls -lah "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/"
-          ls -lah "C:/Program Files (x86)/Windows Kits/10/bin"
           echo '${{ env.MSVC }}/bin/Hostx64/x64' >> $GITHUB_PATH
           echo '${{ env.WINSDK }}/bin/${{ env.WINSDK_VERSION }}/x64' >> $GITHUB_PATH
           LIB="${{ env.WINSDK }}/Lib/${{ env.WINSDK_VERSION }}/um/x64"
@@ -56,7 +54,7 @@ jobs:
           echo "INCLUDE=$INCLUDE" >> $GITHUB_ENV
           scripts/install-deps-windows.cmd
 
-      # - env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     CROSS_COMPILE_ARCH: ${{ matrix.platform.arch }}
-      #   run: npm run release
+      - env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CROSS_COMPILE_ARCH: ${{ matrix.platform.arch }}
+        run: npm run release
