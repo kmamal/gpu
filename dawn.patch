@@ -89,7 +89,7 @@ index e0fe9b77..2342910c 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 1061c8b6..87e2f765 100644
+index 1061c8b6..5eb94fd8 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -34,8 +34,14 @@
@@ -119,7 +119,7 @@ index 1061c8b6..87e2f765 100644
  
      std::tuple<std::vector<std::string>> args;
      auto res = wgpu::interop::FromJS(info, args);
-@@ -73,6 +81,113 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
+@@ -73,6 +81,121 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
      return wgpu::interop::GPU::Create<wgpu::binding::GPU>(env, std::move(flags));
  }
  
@@ -153,7 +153,9 @@ index 1061c8b6..87e2f765 100644
 +        _window = jsWindow;
 +        _instance = dawn::native::Instance().Get();
 +        _device = (reinterpret_cast<wgpu::binding::GPUDevice*>(wgpu::interop::GPUDevice::Unwrap(jsDevice)))->device_.Get();
++        printf("gpu1\n");
 +        _createSwapChain(env);
++        printf("gpu out\n");
 +    };
 +
 +    static Napi::Object NewInstance(Napi::Env env, Napi::Value device, Napi::Value window) {
@@ -200,7 +202,10 @@ index 1061c8b6..87e2f765 100644
 +
 +    void _createSwapChain(const Napi::Env &env) {
 +        Napi::Buffer<char> buffer = { env, _window.Get("native") };
++        printf("gpu2\n");
 +        WGPUSurface surface = wgpu::sdl::CreateSurfaceForWindow(procs, _instance, buffer.Data());
++
++        printf("gpu3\n");
 +
 +        WGPUSwapChainDescriptor swapChainDesc = {};
 +        swapChainDesc.usage = WGPUTextureUsage_RenderAttachment;
@@ -209,7 +214,9 @@ index 1061c8b6..87e2f765 100644
 +        swapChainDesc.height = _window.Get("pixelHeight").ToNumber().Uint32Value();
 +        swapChainDesc.presentMode = WGPUPresentMode_Mailbox;
 +
++        printf("gpu4\n");
 +        _swapChain = procs.deviceCreateSwapChain(_device, surface, &swapChainDesc);
++        printf("gpu5\n");
 +    }
 +};
 +
@@ -227,13 +234,14 @@ index 1061c8b6..87e2f765 100644
 +    auto jsObj = jsArg.ToObject();
 +    auto jsDevice = jsObj.Get("device");
 +    auto jsWindow = jsObj.Get("window");
++        printf("gpu0\n");
 +    return Renderer::NewInstance(info.Env(), jsDevice, jsWindow);
 +}
 +
  #ifdef DAWN_EMIT_COVERAGE
  struct Coverage {
      Coverage() : output_path_{GetOutputPath()} {
-@@ -106,7 +221,8 @@ struct Coverage {
+@@ -106,7 +229,8 @@ struct Coverage {
  // object.
  NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports) {
      // Set all the Dawn procedure function pointers.
@@ -243,7 +251,7 @@ index 1061c8b6..87e2f765 100644
  
      // Register all the interop types
      exports.Set(Napi::String::New(env, "globals"), wgpu::interop::Initialize(env));
-@@ -114,6 +230,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
+@@ -114,6 +238,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
      // Export function that creates and returns the wgpu::interop::GPU interface
      exports.Set(Napi::String::New(env, "create"), Napi::Function::New<CreateGPU>(env));
  
@@ -394,10 +402,10 @@ index 00000000..f8f8a79c
 +add_library(webgpu_sdl ALIAS dawn_sdl)
 diff --git a/src/dawn/sdl/utils.cpp b/src/dawn/sdl/utils.cpp
 new file mode 100644
-index 00000000..711782d9
+index 00000000..31429a5c
 --- /dev/null
 +++ b/src/dawn/sdl/utils.cpp
-@@ -0,0 +1,92 @@
+@@ -0,0 +1,93 @@
 +// Copyright 2020 The Dawn & Tint Authors
 +//
 +// Redistribution and use in source and binary forms, with or without
@@ -466,6 +474,7 @@ index 00000000..711782d9
 +    std::unique_ptr<wgpu::SurfaceDescriptorFromMetalLayer> desc =
 +        std::make_unique<wgpu::SurfaceDescriptorFromMetalLayer>();
 +    desc->layer = ((NativeData*) native)->layer;
++printf("METAL %p\n", desc->layer);
 +    return std::move(desc);
 +#elif defined(DAWN_USE_X11)
 +    std::unique_ptr<wgpu::SurfaceDescriptorFromXlibWindow> desc =
