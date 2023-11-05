@@ -98,6 +98,8 @@ const pipeline = device.createRenderPipeline({
 })
 
 const render = () => {
+	if (window.destroyed) { return }
+
 	const colorTextureView = renderer.getCurrentTextureView()
 
 	const commandEncoder = device.createCommandEncoder()

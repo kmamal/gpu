@@ -16,18 +16,18 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          # - { name: 'Linux (x64)'   ,os: ubuntu-22.04              }
+          - { name: 'Linux (x64)'   ,os: ubuntu-22.04              }
           - { name: 'Windows (x64)' ,os: windows-2022              }
-          # - { name: 'Mac (x64)'     ,os: macos-12                  }
-          # - { name: 'Mac (arm64)'   ,os: macos-12     ,arch: arm64 }
+          - { name: 'Mac (x64)'     ,os: macos-12                  }
+          - { name: 'Mac (arm64)'   ,os: macos-12     ,arch: arm64 }
 
     runs-on: ${{ matrix.platform.os }}
 
     steps:
       # - shell: bash
       #   run: |
-      #     find "/c/Program Files/" -name lib.exe -o -name lld-link.exe
-      #     find "/c/Program Files (x86)/" -name lib.exe -o -name lld-link.exe
+      #     ls -lah "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/"
+      #     ls -lah "C:/Program Files (x86)/Windows Kits/10/bin"
 
       - uses: actions/checkout@v3
 
@@ -54,7 +54,7 @@ jobs:
           echo "INCLUDE=$INCLUDE" >> $GITHUB_ENV
           scripts/install-deps-windows.cmd
 
-      - env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CROSS_COMPILE_ARCH: ${{ matrix.platform.arch }}
-        run: npm run release
+      # - env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     CROSS_COMPILE_ARCH: ${{ matrix.platform.arch }}
+      #   run: npm run release
