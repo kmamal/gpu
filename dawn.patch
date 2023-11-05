@@ -273,17 +273,10 @@ index 82fc4e1e..be31c203 100644
  
      // This promise's JS object lives as long as the device because it is stored in .lost
 diff --git a/src/dawn/samples/CMakeLists.txt b/src/dawn/samples/CMakeLists.txt
-index 1a043f7f..fe29032f 100644
+index 1a043f7f..c7fa91ea 100644
 --- a/src/dawn/samples/CMakeLists.txt
 +++ b/src/dawn/samples/CMakeLists.txt
-@@ -59,7 +59,10 @@ add_executable(Animometer "Animometer.cpp")
- common_compile_options(Animometer)
- target_link_libraries(Animometer dawn_sample_utils)
- 
-+add_executable(ManualSwapChainTest "ManualSwapChainTest.cpp")
-+common_compile_options(ManualSwapChainTest)
-+target_link_libraries(ManualSwapChainTest dawn_sample_utils)
-+
+@@ -62,4 +62,3 @@ target_link_libraries(Animometer dawn_sample_utils)
  add_executable(DawnInfo "DawnInfo.cpp")
  common_compile_options(DawnInfo)
  target_link_libraries(DawnInfo dawn_sample_utils)
