@@ -18,7 +18,7 @@ execSync('gclient sync --no-history -j8 -vvv', {
 
 console.log("applying patch")
 
-execSync(`git apply ${Path.join(C.dir.root, 'dawn.patch')}`, {
+execSync(`git apply --ignore-space-change --ignore-whitespace ${Path.join(C.dir.root, 'dawn.patch')}`, {
 	stdio: 'inherit',
 })
 
