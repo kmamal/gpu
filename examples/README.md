@@ -8,5 +8,9 @@ Multiplies two matrices together and prints the result.
 
 Renders a triagle and displays it in a window.
 
+## [2. Render directly to window](https://github.com/kmamal/gpu/tree/master/examples/02-window)
+
+As above, but renders directly to a window surface.
+
 
 // TODO: more

@@ -8,7 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
-const instance = gpu.create([])
+const instance = gpu.create([ 'verbose=1' ])
 const adapter = await instance.requestAdapter()
 const device = await adapter.requestDevice()
 
@@ -22,7 +22,7 @@ const matrix1 = new Float32Array([
 const gpuBufferMatrix1 = device.createBuffer({
 	mappedAtCreation: true,
 	size: matrix1.byteLength,
-	usage: gpu.BufferUsage.STORAGE,
+	usage: gpu.GPUBufferUsage.STORAGE,
 })
 new Float32Array(gpuBufferMatrix1.getMappedRange()).set(matrix1)
 gpuBufferMatrix1.unmap()
@@ -39,7 +39,7 @@ const matrix2 = new Float32Array([
 const gpuBufferMatrix2 = device.createBuffer({
 	mappedAtCreation: true,
 	size: matrix2.byteLength,
-	usage: gpu.BufferUsage.STORAGE,
+	usage: gpu.GPUBufferUsage.STORAGE,
 })
 new Float32Array(gpuBufferMatrix2.getMappedRange()).set(matrix2)
 gpuBufferMatrix2.unmap()
@@ -47,12 +47,12 @@ gpuBufferMatrix2.unmap()
 const resultSize = Float32Array.BYTES_PER_ELEMENT * (2 + matrix1[0] * matrix2[1])
 const resultBuffer = device.createBuffer({
 	size: resultSize,
-	usage: gpu.BufferUsage.STORAGE | gpu.BufferUsage.COPY_SRC,
+	usage: gpu.GPUBufferUsage.STORAGE | gpu.GPUBufferUsage.COPY_SRC,
 })
 
 const gpuReadBuffer = device.createBuffer({
 	size: resultSize,
-	usage: gpu.BufferUsage.COPY_DST | gpu.BufferUsage.MAP_READ,
+	usage: gpu.GPUBufferUsage.COPY_DST | gpu.GPUBufferUsage.MAP_READ,
 })
 
 const computeShaderFile = path.join(__dirname, 'compute.wgsl')
@@ -96,7 +96,7 @@ passEncoder.end()
 commandEncoder.copyBufferToBuffer(resultBuffer, 0, gpuReadBuffer, 0, resultSize)
 device.queue.submit([ commandEncoder.finish() ])
 
-await gpuReadBuffer.mapAsync(gpu.MapMode.READ)
+await gpuReadBuffer.mapAsync(gpu.GPUMapMode.READ)
 console.log(new Float32Array(gpuReadBuffer.getMappedRange()))
 
 device.destroy()

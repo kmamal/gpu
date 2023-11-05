@@ -1,0 +1,10 @@
+{
+  "version": "0.0.0",
+  "name": "gpu-example-window",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "@kmamal/gpu": "*",
+    "@kmamal/sdl": "*"
+  }
+}

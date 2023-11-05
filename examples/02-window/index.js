@@ -2,33 +2,21 @@
 // Based on [this article](https://alain.xyz/blog/raw-webgpu) written by [Alain Galvan](https://github.com/alaingalvan)
 //
 
-import gpu from '@kmamal/gpu'
 import sdl from '@kmamal/sdl'
+import gpu from '@kmamal/gpu'
+
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
-const window = sdl.video.createWindow({ accelerated: false })
-const { width, height } = window
+const window = sdl.video.createWindow({ webgpu: true })
+const { pixelWidth: width, pixelHeight: height } = window
 
 const instance = gpu.create([ 'verbose=1' ])
 const adapter = await instance.requestAdapter()
 const device = await adapter.requestDevice()
-
-const colorTexture = device.createTexture({
-	size: [ width, height, 1 ],
-	dimension: '2d',
-	format: 'rgba8unorm',
-	usage: gpu.GPUTextureUsage.RENDER_ATTACHMENT | gpu.GPUTextureUsage.COPY_SRC,
-})
-const colorTextureView = colorTexture.createView()
-
-const bufferSize = width * height * 4
-const readBuffer = device.createBuffer({
-	size: bufferSize,
-	usage: gpu.GPUBufferUsage.COPY_DST | gpu.GPUBufferUsage.MAP_READ,
-})
+const renderer = gpu.renderGPUDeviceToWindow({ device, window })
 
 const positions = new Float32Array([
 	...[ 1.0, -1.0, 0.0 ],
@@ -102,44 +90,42 @@ const pipeline = device.createRenderPipeline({
 	fragment: {
 		module: device.createShaderModule({ code: fragmentShaderCode }),
 		entryPoint: 'main',
-		targets: [ { format: 'rgba8unorm' } ],
+		targets: [ { format: renderer.getPreferredFormat() } ],
 	},
 	primitive: {
 		topology: 'triangle-list',
 	},
 })
 
-const commandEncoder = device.createCommandEncoder()
+const render = () => {
+	const colorTextureView = renderer.getCurrentTextureView()
 
-const renderPass = commandEncoder.beginRenderPass({
-	colorAttachments: [
-		{
-			view: colorTextureView,
-			clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
-			loadOp: 'clear',
-			storeOp: 'store',
-		},
-	],
-})
-renderPass.setPipeline(pipeline)
-renderPass.setViewport(0, 0, width, height, 0, 1)
-renderPass.setScissorRect(0, 0, width, height)
-renderPass.setVertexBuffer(0, positionBuffer)
-renderPass.setVertexBuffer(1, colorBuffer)
-renderPass.setIndexBuffer(indexBuffer, 'uint16')
-renderPass.drawIndexed(3)
-renderPass.end()
+	const commandEncoder = device.createCommandEncoder()
 
-commandEncoder.copyTextureToBuffer(
-	{ texture: colorTexture },
-	{ buffer: readBuffer, bytesPerRow: width * 4 },
-	{ width, height },
-)
+	const renderPass = commandEncoder.beginRenderPass({
+		colorAttachments: [
+			{
+				view: colorTextureView,
+				clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+				loadOp: 'clear',
+				storeOp: 'store',
+			},
+		],
+	})
+	renderPass.setPipeline(pipeline)
+	renderPass.setViewport(0, 0, width, height, 0, 1)
+	renderPass.setScissorRect(0, 0, width, height)
+	renderPass.setVertexBuffer(0, positionBuffer)
+	renderPass.setVertexBuffer(1, colorBuffer)
+	renderPass.setIndexBuffer(indexBuffer, 'uint16')
+	renderPass.drawIndexed(3)
+	renderPass.end()
 
-device.queue.submit([ commandEncoder.finish() ])
+	device.queue.submit([ commandEncoder.finish() ])
 
-await readBuffer.mapAsync(gpu.GPUMapMode.READ)
-const resultBuffer = new Uint8Array(readBuffer.getMappedRange())
-window.render(width, height, width * 4, 'rgba32', Buffer.from(resultBuffer))
+	renderer.swap()
 
-device.destroy()
+	setTimeout(render, 0)
+}
+
+render()

@@ -1,4 +1,5 @@
 import Fs from 'fs'
+import Path from 'path'
 import { execSync } from 'child_process'
 import C from './util/common.js'
 
@@ -15,6 +16,12 @@ execSync('gclient sync --no-history -j8 -vvv', {
 	},
 })
 
+console.log("applying patch")
+
+execSync(`git apply ${Path.join(C.dir.root, 'dawn.patch')}`, {
+	stdio: 'inherit',
+})
+
 console.log("configure build in", C.dir.build)
 
 await Fs.promises.rm(C.dir.build, { recursive: true }).catch(() => {})
@@ -23,6 +30,7 @@ await Fs.promises.mkdir(C.dir.build, { recursive: true })
 let CFLAGS
 let LDFLAGS
 let crossCompileFlag
+let backendFlag
 if (C.platform === 'darwin') {
 	crossCompileFlag = process.env.CROSS_COMPILE_ARCH
 		? `-DCMAKE_OSX_ARCHITECTURES="${process.env.CROSS_COMPILE_ARCH}"`
@@ -38,6 +46,10 @@ if (C.platform === 'darwin') {
 		].join(' ')
 		LDFLAGS = '-mmacosx-version-min=10.9'
 	}
+
+	backendFlag = '-DDAWN_ENABLE_BACKEND_METAL=ON'
+} else if (C.platform === 'linux') {
+	backendFlag = '-DDAWN_USE_X11=ON'
 }
 
 execSync(`cmake ${[
@@ -47,9 +59,14 @@ execSync(`cmake ${[
 	`"${C.dir.build}"`,
 	'-GNinja',
 	'-DCMAKE_BUILD_TYPE=Release',
-	'-DDAWN_BUILD_NODE_BINDINGS=1',
-	'-DDAWN_ENABLE_PIC=1',
+	'-DDAWN_BUILD_NODE_BINDINGS=ON',
+	'-DDAWN_ENABLE_PIC=ON',
+	'-DDAWN_SUPPORTS_GLFW_FOR_WINDOWING=OFF',
+	'-DTINT_BUILD_DOCS=OFF',
+	'-DTINT_BUILD_TESTS=OFF',
+	'-DTINT_BUILD_CMD_TOOLS=OFF',
 	crossCompileFlag,
+	backendFlag,
 ].filter(Boolean).join(' ')}`, {
 	stdio: 'inherit',
 	env: {

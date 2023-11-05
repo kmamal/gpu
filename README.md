@@ -2,7 +2,6 @@
 
 [![Package](https://img.shields.io/npm/v/%2540kmamal%252Fgpu)](https://www.npmjs.com/package/@kmamal/gpu)
 [![Dependencies](https://img.shields.io/librariesio/release/npm/@kmamal/gpu)](https://libraries.io/npm/@kmamal%2Fgpu)
-[![Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/npm/%2540kmamal%252Fgpu)](https://snyk.io/test/npm/@kmamal/gpu)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > BEWARE: The [WebGPU specification](https://gpuweb.github.io/gpuweb/) is still a work-in-progress and could change any time.
@@ -15,10 +14,4 @@ It should work on Linux, Mac, and Windows. Prebuilt binaries are available for x
 
 ## Instructions
 
-Check the [examples](https://github.com/kmamal/gpu/tree/master/examples) for how to use this package. You can use both [compute](https://github.com/kmamal/gpu/tree/master/examples/00-compute) and [render](https://github.com/kmamal/gpu/tree/master/examples/01-render) pipelines, but for render pipelines there's of course no surface to display the result on, so you have to read it out into a buffer to use it.
-
-
-## TODO
-
-In the future you should be able to use this package together with [@kmamal/sdl](https://github.com/kmamal/node-sdl#readme) to get direct rendering to window surfaces.
-The goal of this package is to be for WebGPU what [@kmamal/gl](https://github.com/kmamal/headless-gl#readme) is for WebGL.
+Check the [examples](https://github.com/kmamal/gpu/tree/master/examples) for how to use this package. You can use both [compute](https://github.com/kmamal/gpu/tree/master/examples/00-compute) and [render](https://github.com/kmamal/gpu/tree/master/examples/01-render) pipelines. For render pipelines, you can either render the result to a buffer and save it as an image, or you can use [@kmamal/sdl](https://github.com/kmamal/node-sdl#readme) to render directly to a window as in [this example](https://github.com/kmamal/gpu/tree/master/examples/02-window).

@@ -33,10 +33,10 @@
   },
   "depotTools": {
     "url": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
-    "commit": "b7e16d28f692c28dfa5b0886aa7a9beba51c2b69"
+    "commit": "c7628f780970136892e71d9de0dee072a1982dc9"
   },
   "dawn": {
     "url": "https://dawn.googlesource.com/dawn",
-    "commit": "d531a534629ce24f83df010b06ec549f4a9ff8bc"
+    "commit": "f7f4dacbce24ac5468f73c0a7f9ca39421fd3a53"
   }
 }
