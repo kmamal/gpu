@@ -54,7 +54,7 @@ jobs:
           echo "INCLUDE=$INCLUDE" >> $GITHUB_ENV
           scripts/install-deps-windows.cmd
 
-      # - env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     CROSS_COMPILE_ARCH: ${{ matrix.platform.arch }}
-      #   run: npm run release
+      - env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CROSS_COMPILE_ARCH: ${{ matrix.platform.arch }}
+        run: npm run release
