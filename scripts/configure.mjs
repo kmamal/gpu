@@ -49,7 +49,9 @@ if (C.platform === 'darwin') {
 
 	backendFlag = '-DDAWN_ENABLE_BACKEND_METAL=ON'
 } else if (C.platform === 'linux') {
-	backendFlag = '-DDAWN_USE_X11=ON'
+	backendFlag = '-DDAWN_ENABLE_BACKEND_VULKAN=ON -DDAWN_USE_X11=ON'
+} else if (C.platform === 'win32') {
+	backendFlag = '-DDAWN_ENABLE_BACKEND_D3D12=ON'
 }
 
 execSync(`cmake ${[
