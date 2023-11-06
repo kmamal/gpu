@@ -89,7 +89,7 @@ index e0fe9b77..2342910c 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 1061c8b6..5eb94fd8 100644
+index 1061c8b6..35860262 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -34,8 +34,14 @@
@@ -119,7 +119,7 @@ index 1061c8b6..5eb94fd8 100644
  
      std::tuple<std::vector<std::string>> args;
      auto res = wgpu::interop::FromJS(info, args);
-@@ -73,6 +81,121 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
+@@ -73,6 +81,134 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
      return wgpu::interop::GPU::Create<wgpu::binding::GPU>(env, std::move(flags));
  }
  
@@ -208,11 +208,24 @@ index 1061c8b6..5eb94fd8 100644
 +        printf("gpu3\n");
 +
 +        WGPUSwapChainDescriptor swapChainDesc = {};
++        printf("gpu3.1\n");
 +        swapChainDesc.usage = WGPUTextureUsage_RenderAttachment;
++        printf("gpu3.2\n");
 +        swapChainDesc.format = WGPUTextureFormat_BGRA8Unorm;
-+        swapChainDesc.width = _window.Get("pixelWidth").ToNumber().Uint32Value();
++        printf("gpu3.3\n");
++        printf("gpu3.3.1\n");
++        Napi::Value a = _window.Get("pixelWidth");
++        printf("gpu3.3.2\n");
++        Napi::Number b = a.ToNumber();
++        printf("gpu3.3.3\n");
++        uint32_t c = b.Uint32Value();
++        printf("gpu3.3.4\n");
++        swapChainDesc.width = c;
++        printf("gpu3.4\n");
 +        swapChainDesc.height = _window.Get("pixelHeight").ToNumber().Uint32Value();
++        printf("gpu3.5\n");
 +        swapChainDesc.presentMode = WGPUPresentMode_Mailbox;
++        printf("gpu3.6\n");
 +
 +        printf("gpu4\n");
 +        _swapChain = procs.deviceCreateSwapChain(_device, surface, &swapChainDesc);
@@ -241,7 +254,7 @@ index 1061c8b6..5eb94fd8 100644
  #ifdef DAWN_EMIT_COVERAGE
  struct Coverage {
      Coverage() : output_path_{GetOutputPath()} {
-@@ -106,7 +229,8 @@ struct Coverage {
+@@ -106,7 +242,8 @@ struct Coverage {
  // object.
  NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports) {
      // Set all the Dawn procedure function pointers.
@@ -251,7 +264,7 @@ index 1061c8b6..5eb94fd8 100644
  
      // Register all the interop types
      exports.Set(Napi::String::New(env, "globals"), wgpu::interop::Initialize(env));
-@@ -114,6 +238,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
+@@ -114,6 +251,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
      // Export function that creates and returns the wgpu::interop::GPU interface
      exports.Set(Napi::String::New(env, "create"), Napi::Function::New<CreateGPU>(env));
  
