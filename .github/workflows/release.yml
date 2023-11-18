@@ -58,3 +58,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CROSS_COMPILE_ARCH: ${{ matrix.platform.arch }}
         run: npm run release
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: my-artifact
+          path: build/CMakeFiles/CMakeOutput.log
