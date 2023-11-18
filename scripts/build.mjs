@@ -14,4 +14,4 @@ await Promise.all([
 await import('./download-depot-tools.mjs')
 await import('./download-dawn.mjs')
 await import('./configure.mjs')
-// await import('./make.mjs')
+await import('./make.mjs')

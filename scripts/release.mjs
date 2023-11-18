@@ -10,4 +10,4 @@ execSync('npm install', {
 	},
 })
 
-// await import('./upload-release.mjs')
+await import('./upload-release.mjs')
