@@ -75,6 +75,24 @@ index f4e194d9..2d18d091 100644
  add_subdirectory(tests/benchmarks)
  
  if (DAWN_BUILD_SAMPLES)
+diff --git a/src/dawn/native/d3d/SwapChainD3D.cpp b/src/dawn/native/d3d/SwapChainD3D.cpp
+index 57b85028..3e00b807 100644
+--- a/src/dawn/native/d3d/SwapChainD3D.cpp
++++ b/src/dawn/native/d3d/SwapChainD3D.cpp
+@@ -198,11 +198,13 @@ MaybeError SwapChain::InitializeSwapChainFromScratch() {
+     ComPtr<IDXGISwapChain1> swapChain1;
+     switch (GetSurface()->GetType()) {
+         case Surface::Type::WindowsHWND: {
++            fprintf(stderr, "CreateSwapChainForHwnd 1\n");
+             DAWN_TRY(CheckHRESULT(
+                 factory2->CreateSwapChainForHwnd(GetD3DDeviceForCreatingSwapChain(),
+                                                  static_cast<HWND>(GetSurface()->GetHWND()),
+                                                  &swapChainDesc, nullptr, nullptr, &swapChain1),
+                 "Creating the IDXGISwapChain1"));
++            fprintf(stderr, "CreateSwapChainForHwnd 2\n");
+             break;
+         }
+         case Surface::Type::WindowsCoreWindow: {
 diff --git a/src/dawn/node/CMakeLists.txt b/src/dawn/node/CMakeLists.txt
 index e0fe9b77..2342910c 100644
 --- a/src/dawn/node/CMakeLists.txt
@@ -89,7 +107,7 @@ index e0fe9b77..2342910c 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 1061c8b6..6a87fa57 100644
+index 1061c8b6..0b811011 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -34,8 +34,14 @@
@@ -119,7 +137,7 @@ index 1061c8b6..6a87fa57 100644
  
      std::tuple<std::vector<std::string>> args;
      auto res = wgpu::interop::FromJS(info, args);
-@@ -73,6 +81,114 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
+@@ -73,6 +81,122 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
      return wgpu::interop::GPU::Create<wgpu::binding::GPU>(env, std::move(flags));
  }
  
@@ -200,16 +218,24 @@ index 1061c8b6..6a87fa57 100644
 +
 +    void _createSwapChain(const Napi::Env &env) {
 +        Napi::Buffer<char> buffer = { env, _window.Get("native") };
++        fprintf(stderr, "_createSwapChain 1\n");
 +        WGPUSurface surface = wgpu::sdl::CreateSurfaceForWindow(procs, _instance, buffer.Data());
 +
++        fprintf(stderr, "_createSwapChain 2\n");
 +        WGPUSwapChainDescriptor swapChainDesc = {};
 +        swapChainDesc.usage = WGPUTextureUsage_RenderAttachment;
 +        swapChainDesc.format = WGPUTextureFormat_BGRA8Unorm;
-+        swapChainDesc.width = _window.Get("pixelWidth").ToNumber().Uint32Value();;
++        swapChainDesc.width = _window.Get("pixelWidth").ToNumber().Uint32Value();
++        fprintf(stderr, "_createSwapChain 3\n");
 +        swapChainDesc.height = _window.Get("pixelHeight").ToNumber().Uint32Value();
++
++        fprintf(stderr, "_createSwapChain 4\n");
 +        swapChainDesc.presentMode = WGPUPresentMode_Mailbox;
 +
++        fprintf(stderr, "_createSwapChain 5\n");
 +        _swapChain = procs.deviceCreateSwapChain(_device, surface, &swapChainDesc);
++
++        fprintf(stderr, "_createSwapChain 6\n");
 +    }
 +};
 +
@@ -234,7 +260,7 @@ index 1061c8b6..6a87fa57 100644
  #ifdef DAWN_EMIT_COVERAGE
  struct Coverage {
      Coverage() : output_path_{GetOutputPath()} {
-@@ -106,7 +222,8 @@ struct Coverage {
+@@ -106,7 +230,8 @@ struct Coverage {
  // object.
  NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports) {
      // Set all the Dawn procedure function pointers.
@@ -244,7 +270,7 @@ index 1061c8b6..6a87fa57 100644
  
      // Register all the interop types
      exports.Set(Napi::String::New(env, "globals"), wgpu::interop::Initialize(env));
-@@ -114,6 +231,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
+@@ -114,6 +239,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
      // Export function that creates and returns the wgpu::interop::GPU interface
      exports.Set(Napi::String::New(env, "create"), Napi::Function::New<CreateGPU>(env));
  
