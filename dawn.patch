@@ -107,7 +107,7 @@ index e0fe9b77..2342910c 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 1061c8b6..286c79d0 100644
+index 1061c8b6..918851ab 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -34,8 +34,14 @@
@@ -221,7 +221,7 @@ index 1061c8b6..286c79d0 100644
 +    void _createSwapChain(const Napi::Env &env) {
 +        Napi::Buffer<char> buffer = { env, _window.Get("native") };
 +        fprintf(stderr, "_createSwapChain 1\n");
-+        WGPUSurface surface = wgpu::sdl::CreateSurfaceForWindow(procs, _instance, buffer.Data());
++        // WGPUSurface surface = wgpu::sdl::CreateSurfaceForWindow(procs, _instance, buffer.Data());
 +
 +        fprintf(stderr, "_createSwapChain 2\n");
 +        WGPUSwapChainDescriptor swapChainDesc = {};
@@ -235,7 +235,7 @@ index 1061c8b6..286c79d0 100644
 +        swapChainDesc.presentMode = WGPUPresentMode_Mailbox;
 +
 +        fprintf(stderr, "_createSwapChain 5\n");
-+        _swapChain = procs.deviceCreateSwapChain(_device, surface, &swapChainDesc);
++        // _swapChain = procs.deviceCreateSwapChain(_device, surface, &swapChainDesc);
 +
 +        fprintf(stderr, "_createSwapChain 6\n");
 +    }
