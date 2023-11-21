@@ -107,7 +107,7 @@ index e0fe9b77..2342910c 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 1061c8b6..0b811011 100644
+index 1061c8b6..286c79d0 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -34,8 +34,14 @@
@@ -137,20 +137,22 @@ index 1061c8b6..0b811011 100644
  
      std::tuple<std::vector<std::string>> args;
      auto res = wgpu::interop::FromJS(info, args);
-@@ -73,6 +81,122 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
+@@ -73,6 +81,138 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
      return wgpu::interop::GPU::Create<wgpu::binding::GPU>(env, std::move(flags));
  }
  
 +class Renderer : public Napi::ObjectWrap<Renderer> {
 +
++    static Napi::FunctionReference constructor;
++
 +public:
 +
-+    Napi::Object _window;
++    Napi::ObjectReference _window;
 +    WGPUInstance _instance;
 +    WGPUDevice _device;
 +    WGPUSwapChain _swapChain;
 +
-+    static void Init(Napi::Env env) {
++    static void Init(const Napi::Env &env) {
 +        Napi::Function func = DefineClass(env, "Renderer", {
 +            InstanceMethod("getPreferredFormat", &Renderer::getPreferredFormat),
 +            InstanceMethod("getCurrentTexture", &Renderer::getCurrentTexture),
@@ -158,9 +160,9 @@ index 1061c8b6..0b811011 100644
 +            InstanceMethod("swap", &Renderer::swap),
 +            InstanceMethod("resize", &Renderer::resize),
 +        });
-+        Napi::FunctionReference* constructor = new Napi::FunctionReference();
-+        *constructor = Persistent(func);
-+        env.SetInstanceData(constructor);
++
++        constructor = Napi::Persistent(func);
++        constructor.SuppressDestruct();
 +    }
 +
 +    Renderer(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Renderer>(info) {
@@ -168,14 +170,14 @@ index 1061c8b6..0b811011 100644
 +        auto jsDevice = info[0].As<Napi::Object>();
 +        auto jsWindow = info[1].As<Napi::Object>();
 +
-+        _window = jsWindow;
++        _window = Napi::Persistent(jsWindow);
 +        _instance = dawn::native::Instance().Get();
 +        _device = (reinterpret_cast<wgpu::binding::GPUDevice*>(wgpu::interop::GPUDevice::Unwrap(jsDevice)))->device_.Get();
 +        _createSwapChain(env);
 +    };
 +
 +    static Napi::Object NewInstance(Napi::Env env, Napi::Value device, Napi::Value window) {
-+        return env.GetInstanceData<Napi::FunctionReference>()->New({ device, window});
++        return constructor.New({ device, window});
 +    }
 +
 +    Napi::Value getPreferredFormat(const Napi::CallbackInfo& info) {
@@ -239,28 +241,42 @@ index 1061c8b6..0b811011 100644
 +    }
 +};
 +
++Napi::FunctionReference Renderer::constructor;
++
 +Napi::Value RenderGPUDeviceToWindow(const Napi::CallbackInfo& info) {
 +    const Napi::Env& env = info.Env();
++
 +    if (info.Length() != 1) {
 +        Napi::Error::New(env, "renderGPUDeviceToWindow expects exactly 1 argument").ThrowAsJavaScriptException();
 +        return env.Undefined();
 +    }
 +    Napi::Value jsArg = info[0];
++
 +    if (!jsArg.IsObject()) {
 +        Napi::Error::New(env, "argument to renderGPUDeviceToWindow must be an object").ThrowAsJavaScriptException();
 +        return env.Undefined();
 +    }
-+    auto jsObj = jsArg.ToObject();
-+    auto jsDevice = jsObj.Get("device");
-+    auto jsWindow = jsObj.Get("window");
++    Napi::Object jsObj = jsArg.ToObject();
 +
-+    return Renderer::NewInstance(info.Env(), jsDevice, jsWindow);
++    Napi::Value jsDevice = jsObj.Get("device");
++    if (!jsDevice.IsObject()) {
++        Napi::Error::New(env, "device argument to renderGPUDeviceToWindow must be an object").ThrowAsJavaScriptException();
++        return env.Undefined();
++    }
++
++    Napi::Value jsWindow = jsObj.Get("window");
++    if (!jsWindow.IsObject()) {
++        Napi::Error::New(env, "window argument to renderGPUDeviceToWindow must be an object").ThrowAsJavaScriptException();
++        return env.Undefined();
++    }
++
++    return Renderer::NewInstance(env, jsDevice, jsWindow);
 +}
 +
  #ifdef DAWN_EMIT_COVERAGE
  struct Coverage {
      Coverage() : output_path_{GetOutputPath()} {
-@@ -106,7 +230,8 @@ struct Coverage {
+@@ -106,7 +246,8 @@ struct Coverage {
  // object.
  NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports) {
      // Set all the Dawn procedure function pointers.
@@ -270,7 +286,7 @@ index 1061c8b6..0b811011 100644
  
      // Register all the interop types
      exports.Set(Napi::String::New(env, "globals"), wgpu::interop::Initialize(env));
-@@ -114,6 +239,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
+@@ -114,6 +255,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
      // Export function that creates and returns the wgpu::interop::GPU interface
      exports.Set(Napi::String::New(env, "create"), Napi::Function::New<CreateGPU>(env));
  
