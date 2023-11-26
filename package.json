@@ -37,6 +37,6 @@
   },
   "dawn": {
     "url": "https://dawn.googlesource.com/dawn",
-    "commit": "f7f4dacbce24ac5468f73c0a7f9ca39421fd3a53"
+    "commit": "b268f525fc231d4f545ae9a40f002b46276bdd17"
   }
 }
