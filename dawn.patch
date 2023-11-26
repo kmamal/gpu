@@ -107,7 +107,7 @@ index e0fe9b77..2342910c 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 1061c8b6..3752dff2 100644
+index 1061c8b6..a9173200 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -34,8 +34,14 @@
@@ -233,7 +233,7 @@ index 1061c8b6..3752dff2 100644
 +
 +
 +        fprintf(stderr, "_createSwapChain 0\n");
-+        Napi::Buffer<char>   = { env, _window.Get("_native") };
++        Napi::Buffer<char> buffer = { env, _window.Get("_native") };
 +        fprintf(stderr, "_createSwapChain 1\n");
 +        WGPUSurface surface = wgpu::sdl::CreateSurfaceForWindow(procs, _instance, buffer.Data());
 +
