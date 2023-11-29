@@ -89,7 +89,7 @@ index e0fe9b77..2342910c 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 1061c8b6..4e639d6b 100644
+index 1061c8b6..a4dd1cd0 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -34,8 +34,14 @@
@@ -129,6 +129,7 @@ index 1061c8b6..4e639d6b 100644
 +
 +public:
 +
++    std::unique_ptr<dawn::native::Instance> _instance;
 +    Napi::ObjectReference _window;
 +    WGPUDevice _device;
 +    WGPUSwapChain _swapChain;
@@ -199,9 +200,8 @@ index 1061c8b6..4e639d6b 100644
 +private:
 +
 +    void _createSwapChain(const Napi::Env &env) {
-+        WGPUInstance instance = dawn::native::Instance().Get();
 +        Napi::Buffer<char> buffer = { env, _window.Get("_native") };
-+        WGPUSurface surface = wgpu::sdl::CreateSurfaceForWindow(procs, instance, buffer.Data());
++        WGPUSurface surface = wgpu::sdl::CreateSurfaceForWindow(procs, _instance->Get(), buffer.Data());
 +
 +        WGPUSwapChainDescriptor swapChainDesc = {};
 +        swapChainDesc.usage = WGPUTextureUsage_RenderAttachment;
