@@ -89,7 +89,7 @@ index e0fe9b77..2342910c 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 1061c8b6..a4dd1cd0 100644
+index 1061c8b6..23c1cebc 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -34,8 +34,14 @@
@@ -119,7 +119,7 @@ index 1061c8b6..a4dd1cd0 100644
  
      std::tuple<std::vector<std::string>> args;
      auto res = wgpu::interop::FromJS(info, args);
-@@ -73,6 +81,129 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
+@@ -73,6 +81,135 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
      return wgpu::interop::GPU::Create<wgpu::binding::GPU>(env, std::move(flags));
  }
  
@@ -130,8 +130,8 @@ index 1061c8b6..a4dd1cd0 100644
 +public:
 +
 +    std::unique_ptr<dawn::native::Instance> _instance;
-+    Napi::ObjectReference _window;
 +    WGPUDevice _device;
++    Napi::ObjectReference _window;
 +    WGPUSwapChain _swapChain;
 +
 +    static void Init(const Napi::Env &env) {
@@ -149,11 +149,17 @@ index 1061c8b6..a4dd1cd0 100644
 +
 +    Renderer(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Renderer>(info) {
 +        const Napi::Env& env = info.Env();
-+        auto jsDevice = info[0].As<Napi::Object>();
-+        auto jsWindow = info[1].As<Napi::Object>();
 +
-+        _window = Napi::Persistent(jsWindow);
++        WGPUInstanceDescriptor instanceDescriptor{};
++        instanceDescriptor.features.timedWaitAnyEnable = true;
++        _instance = std::make_unique<dawn::native::Instance>(&instanceDescriptor);
++
++        auto jsDevice = info[0].As<Napi::Object>();
 +        _device = (reinterpret_cast<wgpu::binding::GPUDevice*>(wgpu::interop::GPUDevice::Unwrap(jsDevice)))->device_.Get();
++
++        auto jsWindow = info[1].As<Napi::Object>();
++        _window = Napi::Persistent(jsWindow);
++
 +        _createSwapChain(env);
 +    };
 +
@@ -249,7 +255,7 @@ index 1061c8b6..a4dd1cd0 100644
  #ifdef DAWN_EMIT_COVERAGE
  struct Coverage {
      Coverage() : output_path_{GetOutputPath()} {
-@@ -106,7 +237,8 @@ struct Coverage {
+@@ -106,7 +243,8 @@ struct Coverage {
  // object.
  NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports) {
      // Set all the Dawn procedure function pointers.
@@ -259,7 +265,7 @@ index 1061c8b6..a4dd1cd0 100644
  
      // Register all the interop types
      exports.Set(Napi::String::New(env, "globals"), wgpu::interop::Initialize(env));
-@@ -114,6 +246,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
+@@ -114,6 +252,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
      // Export function that creates and returns the wgpu::interop::GPU interface
      exports.Set(Napi::String::New(env, "create"), Napi::Function::New<CreateGPU>(env));
  
