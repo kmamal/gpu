@@ -60,7 +60,7 @@ execSync(`cmake ${[
 	'-B',
 	`"${C.dir.build}"`,
 	'-GNinja',
-	'-DCMAKE_BUILD_TYPE=Debug',
+	'-DCMAKE_BUILD_TYPE=Release',
 	'-DDAWN_BUILD_NODE_BINDINGS=ON',
 	'-DDAWN_ENABLE_PIC=ON',
 	'-DDAWN_SUPPORTS_GLFW_FOR_WINDOWING=OFF',
