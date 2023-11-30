@@ -1,0 +1,11 @@
+{
+  "version": "0.0.0",
+  "name": "gpu-example-texture-loading",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "@kmamal/gpu": "*",
+    "@kmamal/sdl": "*",
+    "pngjs": "*"
+  }
+}
