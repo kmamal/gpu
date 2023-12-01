@@ -15,6 +15,7 @@
     "url": "git@github.com:kmamal/gpu.git"
   },
   "main": "./src/index.js",
+  "types": "./src/index.d.ts",
   "exports": "./src/index.js",
   "scripts": {
     "install": "cd scripts && node install.mjs",
