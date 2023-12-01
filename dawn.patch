@@ -89,7 +89,7 @@ index e0fe9b77..2342910c 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 1061c8b6..463df3e5 100644
+index 1061c8b6..885f41e1 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -34,7 +34,11 @@
@@ -120,7 +120,7 @@ index 1061c8b6..463df3e5 100644
  
      std::tuple<std::vector<std::string>> args;
      auto res = wgpu::interop::FromJS(info, args);
-@@ -70,7 +79,180 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
+@@ -70,7 +79,181 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
      }
  
      // Construct a wgpu::interop::GPU interface, implemented by wgpu::bindings::GPU.
@@ -136,7 +136,8 @@ index 1061c8b6..463df3e5 100644
 +    const Napi::Env& env = info.Env();
 +    error = "";
 +    procs.instanceProcessEvents(_instance);
-+    return error.empty() ? env.Undefined() : Napi::String::New(env, error);
++    if (!error.empty()) { Napi::Error::New(env, error).ThrowAsJavaScriptException(); }
++    return env.Undefined();
 +}
 +
 +void DeviceErrorCallback(WGPUErrorType errorType, const char* message, void*) {
@@ -302,7 +303,7 @@ index 1061c8b6..463df3e5 100644
  }
  
  #ifdef DAWN_EMIT_COVERAGE
-@@ -106,7 +288,8 @@ struct Coverage {
+@@ -106,7 +289,8 @@ struct Coverage {
  // object.
  NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports) {
      // Set all the Dawn procedure function pointers.
@@ -312,7 +313,7 @@ index 1061c8b6..463df3e5 100644
  
      // Register all the interop types
      exports.Set(Napi::String::New(env, "globals"), wgpu::interop::Initialize(env));
-@@ -114,6 +297,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
+@@ -114,6 +298,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
      // Export function that creates and returns the wgpu::interop::GPU interface
      exports.Set(Napi::String::New(env, "create"), Napi::Function::New<CreateGPU>(env));
  
