@@ -89,7 +89,7 @@ index e0fe9b77..2342910c 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 1061c8b6..9889fe79 100644
+index 1061c8b6..a8438b8b 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -34,7 +34,11 @@
@@ -120,7 +120,7 @@ index 1061c8b6..9889fe79 100644
  
      std::tuple<std::vector<std::string>> args;
      auto res = wgpu::interop::FromJS(info, args);
-@@ -70,7 +79,172 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
+@@ -70,7 +79,181 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
      }
  
      // Construct a wgpu::interop::GPU interface, implemented by wgpu::bindings::GPU.
@@ -130,14 +130,18 @@ index 1061c8b6..9889fe79 100644
 +    return wgpu::interop::GPU::Bind(env, std::move(gpu));
 +}
 +
++bool should_abort;
++
 +Napi::Value Refresh(const Napi::CallbackInfo& info) {
 +    const Napi::Env& env = info.Env();
++    should_abort = false;
 +    procs.instanceProcessEvents(_instance);
-+    return env.Undefined();
++    return Napi::Boolean(env, should_abort);
 +}
 +
-+
 +void DeviceErrorCallback(WGPUErrorType errorType, const char* message, void*) {
++    if (should_abort) { return; }
++
 +    const char* errorTypeName = "";
 +    switch (errorType) {
 +        case WGPUErrorType_Validation:
@@ -156,14 +160,19 @@ index 1061c8b6..9889fe79 100644
 +            return;
 +    }
 +    std::cerr << "WebGPU unhandled error: " << errorTypeName << " error: " << message;
-+    abort();
++
++    should_abort = true;
 +}
 +
 +void DeviceLostCallback(WGPUDeviceLostReason reason, const char* message, void*) {
++    if (should_abort) { return; }
++
 +    std::cerr << "WebGPU Device lost: " << message;
 +}
 +
 +void DeviceLogCallback(WGPULoggingType type, const char* message, void*) {
++    if (should_abort) { return; }
++
 +    std::cerr << "WebGPU Device log: " << message;
 +}
 +
@@ -294,7 +303,7 @@ index 1061c8b6..9889fe79 100644
  }
  
  #ifdef DAWN_EMIT_COVERAGE
-@@ -106,7 +280,8 @@ struct Coverage {
+@@ -106,7 +289,8 @@ struct Coverage {
  // object.
  NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports) {
      // Set all the Dawn procedure function pointers.
@@ -304,7 +313,7 @@ index 1061c8b6..9889fe79 100644
  
      // Register all the interop types
      exports.Set(Napi::String::New(env, "globals"), wgpu::interop::Initialize(env));
-@@ -114,6 +289,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
+@@ -114,6 +298,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
      // Export function that creates and returns the wgpu::interop::GPU interface
      exports.Set(Napi::String::New(env, "create"), Napi::Function::New<CreateGPU>(env));
  
