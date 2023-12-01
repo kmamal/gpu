@@ -75,18 +75,6 @@ index f4e194d9..2d18d091 100644
  add_subdirectory(tests/benchmarks)
  
  if (DAWN_BUILD_SAMPLES)
-diff --git a/src/dawn/native/Instance.cpp b/src/dawn/native/Instance.cpp
-index 2a9069b3..60b12acc 100644
---- a/src/dawn/native/Instance.cpp
-+++ b/src/dawn/native/Instance.cpp
-@@ -499,6 +499,7 @@ void InstanceBase::APIProcessEvents() {
-     });
- 
-     for (auto device : devices) {
-+        auto deviceLock(device->GetScopedLock());
-         device->APITick();
-     }
- 
 diff --git a/src/dawn/node/CMakeLists.txt b/src/dawn/node/CMakeLists.txt
 index e0fe9b77..2342910c 100644
 --- a/src/dawn/node/CMakeLists.txt
@@ -101,7 +89,7 @@ index e0fe9b77..2342910c 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 1061c8b6..885f41e1 100644
+index 1061c8b6..fd854e08 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -34,7 +34,11 @@
@@ -147,7 +135,7 @@ index 1061c8b6..885f41e1 100644
 +Napi::Value Refresh(const Napi::CallbackInfo& info) {
 +    const Napi::Env& env = info.Env();
 +    error = "";
-+    procs.instanceProcessEvents(_instance);
++    // procs.instanceProcessEvents(_instance);
 +    if (!error.empty()) { Napi::Error::New(env, error).ThrowAsJavaScriptException(); }
 +    return env.Undefined();
 +}
