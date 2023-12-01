@@ -89,7 +89,7 @@ index e0fe9b77..2342910c 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 1061c8b6..a8438b8b 100644
+index 1061c8b6..27a9702a 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -34,7 +34,11 @@
@@ -136,7 +136,7 @@ index 1061c8b6..a8438b8b 100644
 +    const Napi::Env& env = info.Env();
 +    should_abort = false;
 +    procs.instanceProcessEvents(_instance);
-+    return Napi::Boolean(env, should_abort);
++    return Napi::Boolean::New(env, should_abort);
 +}
 +
 +void DeviceErrorCallback(WGPUErrorType errorType, const char* message, void*) {

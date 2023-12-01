@@ -5,7 +5,10 @@ const {
 	_refresh,
 } = require('../dist/dawn.node')
 
-setInterval(_refresh, 100).unref()
+setInterval(() => {
+	const shouldAbort = _refresh()
+	if (shouldAbort) { process.exit(1) }
+}, 100).unref()
 
 module.exports = {
 	create,
