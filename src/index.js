@@ -2,10 +2,10 @@ const {
 	create,
 	renderGPUDeviceToWindow,
 	globals,
-	_refresh,
+	_processEvents,
 } = require('../dist/dawn.node')
 
-setInterval(_refresh, 100).unref()
+setInterval(_processEvents, 100).unref()
 
 module.exports = {
 	create,

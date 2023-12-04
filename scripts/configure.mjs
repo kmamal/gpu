@@ -4,25 +4,25 @@ import { execSync } from 'child_process'
 import C from './util/common.js'
 
 process.chdir(C.dir.dawn)
-await Fs.promises.copyFile('scripts/standalone-with-node.gclient', '.gclient')
+// await Fs.promises.copyFile('scripts/standalone-with-node.gclient', '.gclient')
 
-console.log("run gclient sync")
-execSync('gclient sync --no-history -j8 -vvv', {
-	stdio: 'inherit',
-	env: {
-		...process.env,
-		...C.depotTools.env,
-		DEPOT_TOOLS_UPDATE: '0',
-	},
-})
+// console.log("run gclient sync")
+// execSync('gclient sync --no-history -j8 -vvv', {
+// 	stdio: 'inherit',
+// 	env: {
+// 		...process.env,
+// 		...C.depotTools.env,
+// 		DEPOT_TOOLS_UPDATE: '0',
+// 	},
+// })
 
-console.log("applying patch")
+// console.log("applying patch")
 
-execSync(`git apply --ignore-space-change --ignore-whitespace ${Path.join(C.dir.root, 'dawn.patch')}`, {
-	stdio: 'inherit',
-})
+// execSync(`git apply --ignore-space-change --ignore-whitespace ${Path.join(C.dir.root, 'dawn.patch')}`, {
+// 	stdio: 'inherit',
+// })
 
-console.log("configure build in", C.dir.build)
+// console.log("configure build in", C.dir.build)
 
 await Fs.promises.rm(C.dir.build, { recursive: true }).catch(() => {})
 await Fs.promises.mkdir(C.dir.build, { recursive: true })
@@ -46,12 +46,8 @@ if (C.platform === 'darwin') {
 		].join(' ')
 		LDFLAGS = '-mmacosx-version-min=10.9'
 	}
-
-	backendFlag = '-DDAWN_ENABLE_BACKEND_METAL=ON'
 } else if (C.platform === 'linux') {
-	backendFlag = '-DDAWN_ENABLE_BACKEND_VULKAN=ON -DDAWN_USE_X11=ON'
-} else if (C.platform === 'win32') {
-	backendFlag = '-DDAWN_ENABLE_BACKEND_D3D12=ON'
+	backendFlag = '-DDAWN_USE_X11=ON -DDAWN_USE_WAYLAND=OFF'
 }
 
 execSync(`cmake ${[
@@ -60,7 +56,7 @@ execSync(`cmake ${[
 	'-B',
 	`"${C.dir.build}"`,
 	'-GNinja',
-	'-DCMAKE_BUILD_TYPE=Release',
+	'-DCMAKE_BUILD_TYPE=Debug',
 	'-DDAWN_BUILD_NODE_BINDINGS=ON',
 	'-DDAWN_ENABLE_PIC=ON',
 	'-DDAWN_SUPPORTS_GLFW_FOR_WINDOWING=OFF',

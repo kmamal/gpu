@@ -89,7 +89,7 @@ index e0fe9b77..2342910c 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 1061c8b6..fd854e08 100644
+index 1061c8b6..36e5b94f 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -34,7 +34,11 @@
@@ -105,14 +105,13 @@ index 1061c8b6..fd854e08 100644
  
  #ifdef DAWN_EMIT_COVERAGE
  extern "C" {
-@@ -46,8 +50,13 @@ int __llvm_profile_write_file(void);
+@@ -46,8 +50,12 @@ int __llvm_profile_write_file(void);
  
  namespace {
  
 +DawnProcTable procs;
 +
-+WGPUInstance _instance;
-+
++Napi::Reference<Napi::Array> gpuArrayRef;
 +
  Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
 -    const auto& env = info.Env();
@@ -120,29 +119,43 @@ index 1061c8b6..fd854e08 100644
  
      std::tuple<std::vector<std::string>> args;
      auto res = wgpu::interop::FromJS(info, args);
-@@ -70,7 +79,181 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
+@@ -70,7 +78,221 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
      }
  
      // Construct a wgpu::interop::GPU interface, implemented by wgpu::bindings::GPU.
 -    return wgpu::interop::GPU::Create<wgpu::binding::GPU>(env, std::move(flags));
-+    auto gpu = std::make_unique<wgpu::binding::GPU>(std::move(flags));
-+    _instance = gpu->instance_.Get();
-+    return wgpu::interop::GPU::Bind(env, std::move(gpu));
++    auto gpu = wgpu::interop::GPU::Create<wgpu::binding::GPU>(env, std::move(flags));
++    Napi::Object jsGpu = gpu;
++
++    if (gpuArrayRef.IsEmpty()) {
++        Napi::Array jsArray = Napi::Array::New(env);
++        gpuArrayRef = Napi::Persistent(jsArray);
++        gpuArrayRef.SuppressDestruct();
++    }
++    Napi::Array jsArray = gpuArrayRef.Value();
++    jsArray.Set(jsArray.Length(), jsGpu);
++
++    return jsGpu;
 +}
 +
-+std::string error;
++Napi::Env *callbackEnv;
 +
-+Napi::Value Refresh(const Napi::CallbackInfo& info) {
-+    const Napi::Env& env = info.Env();
-+    error = "";
-+    // procs.instanceProcessEvents(_instance);
-+    if (!error.empty()) { Napi::Error::New(env, error).ThrowAsJavaScriptException(); }
++Napi::Value ProcessEvents(const Napi::CallbackInfo& info) {
++    Napi::Env env = info.Env();
++    callbackEnv = &env;
++
++    Napi::Array jsArray = gpuArrayRef.Value();
++    int len = jsArray.Length();
++    for (int i = 0 ; i < len; i++) {
++        Napi::Object jsGpu = jsArray.Get(i).ToObject();
++        wgpu::binding::GPU *gpu = reinterpret_cast<wgpu::binding::GPU*>(wgpu::interop::GPU::Unwrap(jsGpu));
++        WGPUInstance wgpuInstance = gpu->instance_.Get();
++        procs.instanceProcessEvents(wgpuInstance);
++    }
 +    return env.Undefined();
 +}
 +
 +void DeviceErrorCallback(WGPUErrorType errorType, const char* message, void*) {
-+    if (!error.empty()) { return; }
-+
 +    std::string errorTypeName;
 +    switch (errorType) {
 +        case WGPUErrorType_Validation:
@@ -161,19 +174,35 @@ index 1061c8b6..fd854e08 100644
 +            return;
 +    }
 +
-+    error = "WebGPU unhandled error: " + errorTypeName + " error: " + message;
++    std::string error = "WebGPU unhandled error: " + errorTypeName + " error: " + message;
++    callbackEnv->Global()
++        .Get("setImmediate")
++        .As<Napi::Function>()
++        .Call({
++            Napi::Function::New(
++                *callbackEnv,
++                [error](const Napi::CallbackInfo& info) {
++                    const Napi::Env &env = info.Env();
++                    Napi::Error::New(env, error).ThrowAsJavaScriptException();
++                }
++            )
++        });
 +}
 +
 +void DeviceLostCallback(WGPUDeviceLostReason reason, const char* message, void*) {
-+    if (!error.empty()) { return; }
-+
-+    std::cerr << "WebGPU Device lost: " << message;
++    std::string error = "WebGPU Device lost: " + std::string(message);
++    callbackEnv->Global()
++        .Get("setImmediate")
++        .As<Napi::Function>()
++        .Call({ Napi::Function::New(*callbackEnv, [error](const Napi::CallbackInfo&) { std::cerr << error; }) });
 +}
 +
 +void DeviceLogCallback(WGPULoggingType type, const char* message, void*) {
-+    if (!error.empty()) { return; }
-+
-+    std::cerr << "WebGPU Device log: " << message;
++    std::string error = "WebGPU Device log: " + std::string(message);
++    callbackEnv->Global()
++        .Get("setImmediate")
++        .As<Napi::Function>()
++        .Call({ Napi::Function::New(*callbackEnv, [error](const Napi::CallbackInfo&) { std::cerr << error; }) });
 +}
 +
 +Napi::FunctionReference constructor;
@@ -182,9 +211,9 @@ index 1061c8b6..fd854e08 100644
 +
 +public:
 +
-+    WGPUDevice _device;
++    Napi::ObjectReference _device;
 +    Napi::ObjectReference _window;
-+    WGPUSwapChain _swapChain;
++    WGPUSwapChain _wgpuSwapChain;
 +
 +    static void Init(const Napi::Env &env) {
 +        Napi::Function func = DefineClass(env, "Renderer", {
@@ -203,11 +232,13 @@ index 1061c8b6..fd854e08 100644
 +        const Napi::Env& env = info.Env();
 +
 +        auto jsDevice = info[0].As<Napi::Object>();
-+        _device = (reinterpret_cast<wgpu::binding::GPUDevice*>(wgpu::interop::GPUDevice::Unwrap(jsDevice)))->device_.Get();
++        _device = Napi::Persistent(jsDevice);
 +
-+        procs.deviceSetUncapturedErrorCallback(_device, DeviceErrorCallback, nullptr);
-+        procs.deviceSetDeviceLostCallback(_device, DeviceLostCallback, nullptr);
-+        procs.deviceSetLoggingCallback(_device, DeviceLogCallback, nullptr);
++        WGPUDevice wgpuDevice = getWGPUDevice();
++
++        procs.deviceSetUncapturedErrorCallback(wgpuDevice, DeviceErrorCallback, nullptr);
++        procs.deviceSetDeviceLostCallback(wgpuDevice, DeviceLostCallback, nullptr);
++        procs.deviceSetLoggingCallback(wgpuDevice, DeviceLogCallback, nullptr);
 +
 +        auto jsWindow = info[1].As<Napi::Object>();
 +        _window = Napi::Persistent(jsWindow);
@@ -226,9 +257,9 @@ index 1061c8b6..fd854e08 100644
 +
 +    Napi::Value getCurrentTexture(const Napi::CallbackInfo& info) {
 +        const Napi::Env& env = info.Env();
-+        WGPUTexture texture = procs.swapChainGetCurrentTexture(_swapChain);
++        WGPUTexture texture = procs.swapChainGetCurrentTexture(_wgpuSwapChain);
 +        return wgpu::interop::GPUTexture::Create<wgpu::binding::GPUTexture>(env,
-+            wgpu::Device::Acquire(_device),
++            wgpu::Device::Acquire(getWGPUDevice()),
 +            wgpu::TextureDescriptor(),
 +            wgpu::Texture::Acquire(texture)
 +        );
@@ -236,7 +267,7 @@ index 1061c8b6..fd854e08 100644
 +
 +    Napi::Value getCurrentTextureView(const Napi::CallbackInfo& info) {
 +        const Napi::Env& env = info.Env();
-+        WGPUTextureView textureView = procs.swapChainGetCurrentTextureView(_swapChain);
++        WGPUTextureView textureView = procs.swapChainGetCurrentTextureView(_wgpuSwapChain);
 +        return wgpu::interop::GPUTextureView::Create<wgpu::binding::GPUTextureView>(env,
 +            wgpu::TextureViewDescriptor(),
 +            wgpu::TextureView::Acquire(textureView)
@@ -245,7 +276,7 @@ index 1061c8b6..fd854e08 100644
 +
 +    Napi::Value swap(const Napi::CallbackInfo& info) {
 +        const Napi::Env& env = info.Env();
-+        procs.swapChainPresent(_swapChain);
++        procs.swapChainPresent(_wgpuSwapChain);
 +        return env.Undefined();
 +    }
 +
@@ -257,18 +288,26 @@ index 1061c8b6..fd854e08 100644
 +
 +private:
 +
++    WGPUDevice getWGPUDevice() {
++        return reinterpret_cast<wgpu::binding::GPUDevice*>(wgpu::interop::GPUDevice::Unwrap(_device.Value()))->device_.Get();
++    }
++
 +    void _createSwapChain(const Napi::Env &env) {
++        WGPUDevice wgpuDevice = getWGPUDevice();
++        WGPUAdapter wgpuAdapter = procs.deviceGetAdapter(wgpuDevice);
++        WGPUInstance wgpuInstance = procs.adapterGetInstance(wgpuAdapter);
++
 +        Napi::Buffer<char> buffer = { env, _window.Get("_native") };
-+        WGPUSurface surface = wgpu::sdl::CreateSurfaceForWindow(procs, _instance, buffer.Data());
++        WGPUSurface wgpuSurface = wgpu::sdl::CreateSurfaceForWindow(procs, wgpuInstance, buffer.Data());
 +
-+        WGPUSwapChainDescriptor swapChainDesc = {};
-+        swapChainDesc.usage = WGPUTextureUsage_RenderAttachment;
-+        swapChainDesc.format = WGPUTextureFormat_BGRA8Unorm;
-+        swapChainDesc.width = _window.Get("_pixelWidth").ToNumber().Uint32Value();
-+        swapChainDesc.height = _window.Get("_pixelHeight").ToNumber().Uint32Value();
-+        swapChainDesc.presentMode = WGPUPresentMode_Mailbox;
++        WGPUSwapChainDescriptor wgpuSwapChainDesc = {};
++        wgpuSwapChainDesc.usage = WGPUTextureUsage_RenderAttachment;
++        wgpuSwapChainDesc.format = WGPUTextureFormat_BGRA8Unorm;
++        wgpuSwapChainDesc.width = _window.Get("_pixelWidth").ToNumber().Uint32Value();
++        wgpuSwapChainDesc.height = _window.Get("_pixelHeight").ToNumber().Uint32Value();
++        wgpuSwapChainDesc.presentMode = WGPUPresentMode_Mailbox;
 +
-+        _swapChain = procs.deviceCreateSwapChain(_device, surface, &swapChainDesc);
++        _wgpuSwapChain = procs.deviceCreateSwapChain(wgpuDevice, wgpuSurface, &wgpuSwapChainDesc);
 +    }
 +};
 +
@@ -303,7 +342,7 @@ index 1061c8b6..fd854e08 100644
  }
  
  #ifdef DAWN_EMIT_COVERAGE
-@@ -106,7 +289,8 @@ struct Coverage {
+@@ -106,7 +328,8 @@ struct Coverage {
  // object.
  NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports) {
      // Set all the Dawn procedure function pointers.
@@ -313,13 +352,15 @@ index 1061c8b6..fd854e08 100644
  
      // Register all the interop types
      exports.Set(Napi::String::New(env, "globals"), wgpu::interop::Initialize(env));
-@@ -114,6 +298,10 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
+@@ -114,6 +337,12 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
      // Export function that creates and returns the wgpu::interop::GPU interface
      exports.Set(Napi::String::New(env, "create"), Napi::Function::New<CreateGPU>(env));
  
++    exports.Set(Napi::String::New(env, "_processEvents"), Napi::Function::New<ProcessEvents>(env));
++
 +    Renderer::Init(env);
++
 +    exports.Set(Napi::String::New(env, "renderGPUDeviceToWindow"), Napi::Function::New<RenderGPUDeviceToWindow>(env));
-+    exports.Set(Napi::String::New(env, "_refresh"), Napi::Function::New<Refresh>(env));
 +
  #ifdef DAWN_EMIT_COVERAGE
      Coverage* coverage = new Coverage();
