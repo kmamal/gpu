@@ -4,25 +4,25 @@ import { execSync } from 'child_process'
 import C from './util/common.js'
 
 process.chdir(C.dir.dawn)
-// await Fs.promises.copyFile('scripts/standalone-with-node.gclient', '.gclient')
+await Fs.promises.copyFile('scripts/standalone-with-node.gclient', '.gclient')
 
-// console.log("run gclient sync")
-// execSync('gclient sync --no-history -j8 -vvv', {
-// 	stdio: 'inherit',
-// 	env: {
-// 		...process.env,
-// 		...C.depotTools.env,
-// 		DEPOT_TOOLS_UPDATE: '0',
-// 	},
-// })
+console.log("run gclient sync")
+execSync('gclient sync --no-history -j8 -vvv', {
+	stdio: 'inherit',
+	env: {
+		...process.env,
+		...C.depotTools.env,
+		DEPOT_TOOLS_UPDATE: '0',
+	},
+})
 
-// console.log("applying patch")
+console.log("applying patch")
 
-// execSync(`git apply --ignore-space-change --ignore-whitespace ${Path.join(C.dir.root, 'dawn.patch')}`, {
-// 	stdio: 'inherit',
-// })
+execSync(`git apply --ignore-space-change --ignore-whitespace ${Path.join(C.dir.root, 'dawn.patch')}`, {
+	stdio: 'inherit',
+})
 
-// console.log("configure build in", C.dir.build)
+console.log("configure build in", C.dir.build)
 
 await Fs.promises.rm(C.dir.build, { recursive: true }).catch(() => {})
 await Fs.promises.mkdir(C.dir.build, { recursive: true })
