@@ -477,7 +477,7 @@ index 000000000..f8f8a79cf
 +add_library(webgpu_sdl ALIAS dawn_sdl)
 diff --git a/src/dawn/sdl/utils.cpp b/src/dawn/sdl/utils.cpp
 new file mode 100644
-index 000000000..17dfb12a1
+index 000000000..a774d8cae
 --- /dev/null
 +++ b/src/dawn/sdl/utils.cpp
 @@ -0,0 +1,107 @@
@@ -542,7 +542,7 @@ index 000000000..17dfb12a1
 +    desc->chain.next = nullptr;
 +    desc->chain.sType = WGPUSType_SurfaceSourceWindowsHWND;
 +    desc->hwnd = native->hwnd;
-+    desc->WGPUhinstance = native->hinstance;
++    desc->hinstance = native->hinstance;
 +    return {
 +        reinterpret_cast<WGPUChainedStruct*>(desc),
 +        [](WGPUChainedStruct* desc) {
