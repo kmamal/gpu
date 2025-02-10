@@ -30,9 +30,11 @@ jobs:
         shell: bash
         run: |
           MSVC_DIR='C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC'
+          ls -lah "$MSVC_DIR"
           MSVC_VERSION=$(ls "${MSVC_DIR}" | sort -Vr | head -n1)
           MSVC="${MSVC_DIR}/${MSVC_VERSION}"
           WINSDK_DIR='C:/Program Files (x86)/Windows Kits/10'
+          ls -lah "$WINSDK_DIR"
           WINSDK_VERSION=$(ls "${WINSDK_DIR}" | grep -E '^[0-9]' | sort -Vr | head -n1)
           echo "${MSVC}/bin/Hostx64/x64" >> $GITHUB_PATH
           echo "${WINSDK_DIR}/bin/${WINSDK_VERSION}/x64" >> $GITHUB_PATH
