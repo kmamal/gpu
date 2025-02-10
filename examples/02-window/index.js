@@ -1,9 +1,9 @@
-//
+// 
 // Based on [this article](https://alain.xyz/blog/raw-webgpu) written by [Alain Galvan](https://github.com/alaingalvan)
-//
+// 
 
 import sdl from '@kmamal/sdl'
-import gpu from '@kmamal/gpu'
+import gpu from '../../src/index.js'
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -100,14 +100,12 @@ const pipeline = device.createRenderPipeline({
 const render = () => {
 	if (window.destroyed) { return }
 
-	const colorTextureView = renderer.getCurrentTextureView()
-
 	const commandEncoder = device.createCommandEncoder()
 
 	const renderPass = commandEncoder.beginRenderPass({
 		colorAttachments: [
 			{
-				view: colorTextureView,
+				view: renderer.getCurrentTextureView(),
 				clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
 				loadOp: 'clear',
 				storeOp: 'store',
@@ -131,3 +129,8 @@ const render = () => {
 }
 
 render()
+
+window.on('close', () => {
+	device.destroy()
+	gpu.destroy(instance)
+})

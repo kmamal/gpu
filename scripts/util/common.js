@@ -12,6 +12,7 @@ dir.publish = Path.join(dir.root, 'publish')
 const pkgPath = Path.join(dir.root, 'package.json')
 const pkg = JSON.parse(Fs.readFileSync(pkgPath).toString())
 const version = pkg.version
+const isPrerelease = version.includes('-')
 const [ , owner, repo ] = pkg.repository.url.match(/([^/:]+)\/([^/]+).git$/u)
 
 const { platform, arch } = process
@@ -29,6 +30,7 @@ depotTools.env = platform === 'win32' ? {
 module.exports = {
 	dir,
 	version,
+	isPrerelease,
 	owner,
 	repo,
 	platform,

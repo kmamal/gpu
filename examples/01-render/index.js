@@ -1,8 +1,8 @@
-//
+// 
 // Based on [this article](https://alain.xyz/blog/raw-webgpu) written by [Alain Galvan](https://github.com/alaingalvan)
-//
+// 
 
-import gpu from '@kmamal/gpu'
+import gpu from '../../src/index.js'
 import sdl from '@kmamal/sdl'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 const window = sdl.video.createWindow({ accelerated: false })
-const { width, height } = window
+const { pixelWidth: width, pixelHeight: height } = window
 
 const instance = gpu.create([ 'verbose=1' ])
 const adapter = await instance.requestAdapter()
@@ -142,4 +142,7 @@ await readBuffer.mapAsync(gpu.GPUMapMode.READ)
 const resultBuffer = new Uint8Array(readBuffer.getMappedRange())
 window.render(width, height, width * 4, 'rgba32', Buffer.from(resultBuffer))
 
-device.destroy()
+window.on('close', () => {
+	device.destroy()
+	gpu.destroy(instance)
+})

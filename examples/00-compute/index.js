@@ -1,8 +1,8 @@
-//
+// 
 // Based on [this article](https://web.dev/gpu-compute/) written by [François Beaufort](https://github.com/beaufortfrancois)
-//
+// 
 
-import gpu from '@kmamal/gpu'
+import gpu from '../../src/index.js'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -100,3 +100,4 @@ await gpuReadBuffer.mapAsync(gpu.GPUMapMode.READ)
 console.log(new Float32Array(gpuReadBuffer.getMappedRange()))
 
 device.destroy()
+gpu.destroy(instance)

@@ -2,7 +2,7 @@ import Fs from 'fs'
 import { once } from 'events'
 import C from './util/common.js'
 import { fetch } from './util/fetch.js'
-import Tar from 'tar'
+import * as Tar from 'tar'
 
 const url = `https://github.com/${C.owner}/${C.repo}/releases/download/v${C.version}/${C.assetName}`
 

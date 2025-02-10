@@ -3024,6 +3024,13 @@ interface GPUTextureUsage {
   readonly RENDER_ATTACHMENT: GPUFlagsConstant;
 }
 
+interface Renderer {
+  getPreferredFormat(): GPUTextureFormat
+  getCurrentTexture(): GPUTexture
+  getCurrentTextureView(): GPUTextureView
+  swap()
+  resize()
+}
 
 interface WebGPU {
   GPUSupportedFeatures: GPUSupportedFeatures
@@ -3069,7 +3076,8 @@ interface WebGPU {
   GPUUncapturedErrorEvent: GPUUncapturedErrorEvent
 
   create(args: string[]): GPU
-  renderGPUDeviceToWindow({ device: GPUDevice, window: any }): void
+  renderGPUDeviceToWindow({ device: GPUDevice, window: any }): Renderer
+  destroy(gpu: GPU)
 }
 
 declare const gpu: WebGPU

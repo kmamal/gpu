@@ -12,7 +12,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git@github.com:kmamal/gpu.git"
+    "url": "git+ssh://git@github.com:kmamal/gpu.git"
   },
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -30,14 +30,14 @@
     "clean": "cd scripts && node clean.mjs"
   },
   "dependencies": {
-    "tar": "^6.1.15"
+    "tar": "^7.4.3"
   },
   "depotTools": {
     "url": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
-    "commit": "c7628f780970136892e71d9de0dee072a1982dc9"
+    "commit": "cf5b6bd0cbc9a4a149818d0306a73723ddce5903"
   },
   "dawn": {
     "url": "https://dawn.googlesource.com/dawn",
-    "commit": "b268f525fc231d4f545ae9a40f002b46276bdd17"
+    "commit": "ddf744c3326de9291039d88f207981f205c7704a"
   }
 }

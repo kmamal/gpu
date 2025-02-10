@@ -1,5 +1,5 @@
 import sdl from '@kmamal/sdl'
-import gpu from '@kmamal/gpu'
+import gpu from '../../src/index.js'
 import { PNG } from 'pngjs'
 
 import fs from 'node:fs'
@@ -37,20 +37,20 @@ const createBuffer = (arr, usage) => {
 }
 
 const vertices = new Float32Array([
-	/* eslint-disable array-element-newline, no-multi-spaces */
+	/* eslint-disable @stylistic/array-element-newline */
 	-1.0, -1.0,
 	+1.0, -1.0,
 	+1.0, +1.0,
 	-1.0, +1.0,
-	/* eslint-enable array-element-newline, no-multi-spaces */
+	/* eslint-enable @stylistic/array-element-newline */
 ])
 const vertexBuffer = createBuffer(vertices, gpu.GPUBufferUsage.VERTEX)
 
 const indices = new Uint16Array([
-	/* eslint-disable array-element-newline, no-multi-spaces */
+	/* eslint-disable @stylistic/array-element-newline */
 	0, 1, 2,
 	2, 3, 0,
-	/* eslint-enable array-element-newline, no-multi-spaces */
+	/* eslint-enable @stylistic/array-element-newline */
 ])
 const indexBuffer = createBuffer(indices, gpu.GPUBufferUsage.INDEX)
 
@@ -164,6 +164,13 @@ const render = () => {
 	device.queue.submit([ commandEncoder.finish() ])
 
 	renderer.swap()
+
+	setTimeout(render, 0)
 }
 
 render()
+
+window.on('close', () => {
+	device.destroy()
+	gpu.destroy(instance)
+})

@@ -2,7 +2,7 @@ import Fs from 'fs'
 import Path from 'path'
 import C from './util/common.js'
 import { fetch } from './util/fetch.js'
-import Tar from 'tar'
+import * as Tar from 'tar'
 
 const commonHeaders = {
 	"Accept": 'application/vnd.github+json',
@@ -36,6 +36,8 @@ getRelease: {
 			body: JSON.stringify({
 				tag_name: `v${C.version}`, // eslint-disable-line camelcase
 				name: `v${C.version}`,
+				prerelease: C.isPrerelease,
+				make_latest: `${!C.isPrerelease}`, // eslint-disable-line camelcase
 			}),
 		},
 	)

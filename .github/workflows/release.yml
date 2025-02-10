@@ -2,11 +2,8 @@ name: Build and upload
 
 on: workflow_dispatch
 
-env:
-  # NOTE: MSVC version changes constantly
-  MSVC: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.37.32822
-  WINSDK: C:/Program Files (x86)/Windows Kits/10
-  WINSDK_VERSION: 10.0.22621.0
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -18,44 +15,41 @@ jobs:
         platform:
           - { name: 'Linux (x64)'   ,os: ubuntu-22.04              }
           - { name: 'Windows (x64)' ,os: windows-2022              }
-          - { name: 'Mac (x64)'     ,os: macos-12                  }
-          - { name: 'Mac (arm64)'   ,os: macos-12     ,arch: arm64 }
+          - { name: 'Mac (x64)'     ,os: macos-14     ,arch: x64   }
+          - { name: 'Mac (arm64)'   ,os: macos-14     ,arch: arm64 }
 
     runs-on: ${{ matrix.platform.os }}
 
     steps:
-      # - shell: bash
-      #   run: |
-      #     ls -lah "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/"
-      #     ls -lah "C:/Program Files (x86)/Windows Kits/10/bin"
-
-      # - shell: bash
-      #   run: printenv
-
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - if: ${{ startsWith(matrix.platform.os, 'ubuntu-') }}
         run: scripts/install-deps-ubuntu.sh
 
-      - if: ${{ startsWith(matrix.platform.os, 'macos-') }}
-        run: scripts/install-deps-mac.sh
-
       - if: ${{ startsWith(matrix.platform.os, 'windows-') }}
         shell: bash
         run: |
-          echo '${{ env.MSVC }}/bin/Hostx64/x64' >> $GITHUB_PATH
-          echo '${{ env.WINSDK }}/bin/${{ env.WINSDK_VERSION }}/x64' >> $GITHUB_PATH
-          LIB="${{ env.WINSDK }}/Lib/${{ env.WINSDK_VERSION }}/um/x64"
-          LIB="${{ env.WINSDK }}/Lib/${{ env.WINSDK_VERSION }}/ucrt/x64;$LIB"
-          LIB="${{ env.MSVC }}/lib/x64;$LIB"
+          MSVC_DIR='C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC'
+          MSVC_VERSION=$(ls "${MSVC_DIR}" | sort -Vr | head -n1)
+          MSVC="${MSVC_DIR}/${MSVC_VERSION}"
+          WINSDK_DIR='C:/Program Files (x86)/Windows Kits/10'
+          WINSDK_VERSION=$(ls "${WINSDK_DIR}" | grep -E '^[0-9]' | sort -Vr | head -n1)
+          echo '${MSVC}/bin/Hostx64/x64' >> $GITHUB_PATH
+          echo '${WINSDK_DIR}/bin/${WINSDK_VERSION}/x64' >> $GITHUB_PATH
+          LIB="${WINSDK_DIR}/Lib/${WINSDK_VERSION}/um/x64"
+          LIB="${WINSDK_DIR}/Lib/${WINSDK_VERSION}/ucrt/x64;$LIB"
+          LIB="${MSVC}/lib/x64;$LIB"
           echo "LIB=$LIB" >> $GITHUB_ENV
-          INCLUDE="${{ env.MSVC }}/include"
-          INCLUDE="${{ env.WINSDK }}/Include/${{ env.WINSDK_VERSION }}/ucrt;$INCLUDE"
-          INCLUDE="${{ env.WINSDK }}/Include/${{ env.WINSDK_VERSION }}/um;$INCLUDE"
-          INCLUDE="${{ env.WINSDK }}/Include/${{ env.WINSDK_VERSION }}/shared;$INCLUDE"
-          INCLUDE="${{ env.WINSDK }}/Include/${{ env.WINSDK_VERSION }}/winrt;$INCLUDE"
+          INCLUDE="${MSVC}/include"
+          INCLUDE="${WINSDK_DIR}/Include/${WINSDK_VERSION}/ucrt;$INCLUDE"
+          INCLUDE="${WINSDK_DIR}/Include/${WINSDK_VERSION}/um;$INCLUDE"
+          INCLUDE="${WINSDK_DIR}/Include/${WINSDK_VERSION}/shared;$INCLUDE"
+          INCLUDE="${WINSDK_DIR}/Include/${WINSDK_VERSION}/winrt;$INCLUDE"
           echo "INCLUDE=$INCLUDE" >> $GITHUB_ENV
           scripts/install-deps-windows.cmd
+
+      - if: ${{ startsWith(matrix.platform.os, 'macos-') }}
+        run: scripts/install-deps-mac.sh
 
       - env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
