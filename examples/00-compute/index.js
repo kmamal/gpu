@@ -2,7 +2,7 @@
 // Based on [this article](https://web.dev/gpu-compute/) written by [François Beaufort](https://github.com/beaufortfrancois)
 // 
 
-import gpu from '../../src/index.js'
+import gpu from '@kmamal/gpu'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'

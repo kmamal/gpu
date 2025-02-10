@@ -3,7 +3,7 @@
 // 
 
 import sdl from '@kmamal/sdl'
-import gpu from '../../src/index.js'
+import gpu from '@kmamal/gpu'
 
 import fs from 'node:fs'
 import path from 'node:path'

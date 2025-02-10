@@ -2,7 +2,7 @@
 // Based on [this article](https://alain.xyz/blog/raw-webgpu) written by [Alain Galvan](https://github.com/alaingalvan)
 // 
 
-import gpu from '../../src/index.js'
+import gpu from '@kmamal/gpu'
 import sdl from '@kmamal/sdl'
 import fs from 'node:fs'
 import path from 'node:path'

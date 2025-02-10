@@ -1,5 +1,5 @@
 import sdl from '@kmamal/sdl'
-import gpu from '../../src/index.js'
+import gpu from '@kmamal/gpu'
 import { PNG } from 'pngjs'
 
 import fs from 'node:fs'
