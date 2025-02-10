@@ -34,8 +34,8 @@ jobs:
           MSVC="${MSVC_DIR}/${MSVC_VERSION}"
           WINSDK_DIR='C:/Program Files (x86)/Windows Kits/10'
           WINSDK_VERSION=$(ls "${WINSDK_DIR}" | grep -E '^[0-9]' | sort -Vr | head -n1)
-          echo '${MSVC}/bin/Hostx64/x64' >> $GITHUB_PATH
-          echo '${WINSDK_DIR}/bin/${WINSDK_VERSION}/x64' >> $GITHUB_PATH
+          echo "${MSVC}/bin/Hostx64/x64" >> $GITHUB_PATH
+          echo "${WINSDK_DIR}/bin/${WINSDK_VERSION}/x64" >> $GITHUB_PATH
           LIB="${WINSDK_DIR}/Lib/${WINSDK_VERSION}/um/x64"
           LIB="${WINSDK_DIR}/Lib/${WINSDK_VERSION}/ucrt/x64;$LIB"
           LIB="${MSVC}/lib/x64;$LIB"
