@@ -91,10 +91,15 @@ index d8860f618..cd4716fda 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 0ac36d0e3..0fcef5edd 100644
+index 0ac36d0e3..450b9d18e 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
-@@ -34,7 +34,12 @@
+@@ -30,11 +30,17 @@
+ #include <tuple>
+ #include <utility>
+ #include <vector>
++#include <map>
+ 
  #include "dawn/dawn_proc.h"
  #include "src/dawn/node/binding/Flags.h"
  #include "src/dawn/node/binding/GPU.h"
@@ -108,11 +113,20 @@ index 0ac36d0e3..0fcef5edd 100644
  
  #ifdef DAWN_EMIT_COVERAGE
  extern "C" {
-@@ -44,10 +49,12 @@ int __llvm_profile_write_file(void);
+@@ -44,10 +50,21 @@ int __llvm_profile_write_file(void);
  }
  #endif  // DAWN_EMIT_COVERAGE
  
 +const DawnProcTable *procs;
++
++Napi::FunctionReference constructor;
++
++std::map<std::string, WGPUPresentMode> wgpuPresentModes = {
++    { "fifo", WGPUPresentMode_Fifo },
++    { "fifoRelaxed", WGPUPresentMode_FifoRelaxed },
++    { "immediate", WGPUPresentMode_Immediate },
++    { "mailbox", WGPUPresentMode_Mailbox }
++};
 +
  namespace {
  
@@ -122,7 +136,7 @@ index 0ac36d0e3..0fcef5edd 100644
  
      std::tuple<std::vector<std::string>> args;
      if (auto res = wgpu::interop::FromJS(info, args); !res) {
-@@ -69,7 +76,158 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
+@@ -69,7 +86,174 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
      }
  
      // Construct a wgpu::interop::GPU interface, implemented by wgpu::bindings::GPU.
@@ -132,8 +146,6 @@ index 0ac36d0e3..0fcef5edd 100644
 +
 +    return jsGpu;
 +}
-+
-+Napi::FunctionReference constructor;
 +
 +class Renderer : public Napi::ObjectWrap<Renderer> {
 +
@@ -155,11 +167,14 @@ index 0ac36d0e3..0fcef5edd 100644
 +    Renderer(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Renderer>(info) {
 +        const Napi::Env& env = info.Env();
 +
-+        auto jsDevice = info[0].As<Napi::Object>();
++        Napi::Object jsDevice = info[0].As<Napi::Object>();
 +        _device = Napi::Persistent(jsDevice);
 +
-+        auto jsWindow = info[1].As<Napi::Object>();
++        Napi::Object jsWindow = info[1].As<Napi::Object>();
 +        _window = Napi::Persistent(jsWindow);
++
++        Napi::String jsPresentMode = info[2].As<Napi::String>();
++        _wgpuPresentMode = wgpuPresentModes[jsPresentMode.Utf8Value()];
 +
 +        _wgpuDevice = reinterpret_cast<wgpu::binding::GPUDevice*>(wgpu::interop::GPUDevice::Unwrap(_device.Value()))->device_.Get();
 +        _wgpuAdapter = procs->deviceGetAdapter(_wgpuDevice);
@@ -168,8 +183,8 @@ index 0ac36d0e3..0fcef5edd 100644
 +        _createSurface(env);
 +    };
 +
-+    static Napi::Object NewInstance(Napi::Env env, Napi::Value device, Napi::Value window) {
-+        return constructor.New({ device, window});
++    static Napi::Object NewInstance(Napi::Env env, Napi::Value device, Napi::Value window, Napi::Value presentMode) {
++        return constructor.New({ device, window, presentMode });
 +    }
 +
 +    Napi::Value getPreferredFormat(const Napi::CallbackInfo& info) {
@@ -224,6 +239,7 @@ index 0ac36d0e3..0fcef5edd 100644
 +
 +    Napi::ObjectReference _device;
 +    Napi::ObjectReference _window;
++    WGPUPresentMode _wgpuPresentMode;
 +    WGPUDevice _wgpuDevice;
 +    WGPUAdapter _wgpuAdapter;
 +    WGPUInstance _wgpuInstance;
@@ -246,7 +262,7 @@ index 0ac36d0e3..0fcef5edd 100644
 +        wgpuConfig.alphaMode = WGPUCompositeAlphaMode_Opaque;
 +        wgpuConfig.width = _window.Get("_pixelWidth").ToNumber().Uint32Value();
 +        wgpuConfig.height = _window.Get("_pixelHeight").ToNumber().Uint32Value();
-+        wgpuConfig.presentMode = WGPUPresentMode_Mailbox;
++        wgpuConfig.presentMode = _wgpuPresentMode;
 +        procs->surfaceConfigure(_wgpuSurface, &wgpuConfig);
 +    }
 +};
@@ -278,11 +294,25 @@ index 0ac36d0e3..0fcef5edd 100644
 +        return env.Undefined();
 +    }
 +
-+    return Renderer::NewInstance(env, jsDevice, jsWindow);
++    Napi::Value jsPresentMode = jsObj.Get("presentMode");
++    if (jsPresentMode.IsUndefined()) {
++        jsPresentMode = Napi::String::New(env, "fifo");
++    } else if (!jsPresentMode.IsString()) {
++        Napi::Error::New(env, "presentMode argument to renderGPUDeviceToWindow must be a string").ThrowAsJavaScriptException();
++        return env.Undefined();
++    } else {
++        std::string presentModeStr = jsPresentMode.As<Napi::String>().Utf8Value();
++        if (wgpuPresentModes.find(presentModeStr) == wgpuPresentModes.end()) {
++            Napi::Error::New(env, "presentMode argument to renderGPUDeviceToWindow has invalid value").ThrowAsJavaScriptException();
++            return env.Undefined();
++        }
++    }
++
++    return Renderer::NewInstance(env, jsDevice, jsWindow, jsPresentMode);
  }
  
  #ifdef DAWN_EMIT_COVERAGE
-@@ -105,13 +263,18 @@ struct Coverage {
+@@ -105,13 +289,18 @@ struct Coverage {
  // object.
  NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports) {
      // Set all the Dawn procedure function pointers.

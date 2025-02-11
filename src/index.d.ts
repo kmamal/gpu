@@ -3024,6 +3024,12 @@ interface GPUTextureUsage {
   readonly RENDER_ATTACHMENT: GPUFlagsConstant;
 }
 
+type PresentMode
+  = 'fifo'
+  | 'fifoRelaxed'
+  | 'immediate'
+  | 'mailbox'
+
 interface Renderer {
   getPreferredFormat(): GPUTextureFormat
   getCurrentTexture(): GPUTexture
@@ -3076,7 +3082,11 @@ interface WebGPU {
   GPUUncapturedErrorEvent: GPUUncapturedErrorEvent
 
   create(args: string[]): GPU
-  renderGPUDeviceToWindow({ device: GPUDevice, window: any }): Renderer
+  renderGPUDeviceToWindow(options: {
+    device: GPUDevice,
+    window: any,
+    presentMode?: PresentMode,
+  }): Renderer
   destroy(gpu: GPU)
 }
 

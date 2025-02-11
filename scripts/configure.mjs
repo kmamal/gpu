@@ -30,7 +30,7 @@ await Fs.promises.mkdir(C.dir.build, { recursive: true })
 let CFLAGS
 let LDFLAGS
 let crossCompileFlag
-let backendFlag
+let backendFlags
 if (C.platform === 'darwin') {
 	let arch = process.env.CROSS_COMPILE_ARCH ?? C.arch
 	if (arch === 'x64') { arch = 'x86_64' }
@@ -48,7 +48,10 @@ if (C.platform === 'darwin') {
 		LDFLAGS = '-mmacosx-version-min=10.9'
 	}
 } else if (C.platform === 'linux') {
-	backendFlag = '-DDAWN_USE_X11=ON -DDAWN_USE_WAYLAND=OFF'
+	backendFlags = [
+		'-DDAWN_USE_X11=ON',
+		'-DDAWN_USE_WAYLAND=OFF',
+	]
 }
 
 execSync(`cmake ${[
@@ -59,13 +62,16 @@ execSync(`cmake ${[
 	'-GNinja',
 	'-DCMAKE_BUILD_TYPE=Release',
 	'-DDAWN_BUILD_NODE_BINDINGS=ON',
-	'-DDAWN_ENABLE_PIC=ON',
-	'-DDAWN_SUPPORTS_GLFW_FOR_WINDOWING=OFF',
-	'-DTINT_BUILD_DOCS=OFF',
+	'-DDAWN_BUILD_SAMPLES=OFF',
 	'-DTINT_BUILD_TESTS=OFF',
 	'-DTINT_BUILD_CMD_TOOLS=OFF',
+	'-DDAWN_USE_GLFW=OFF',
+	'-DDAWN_SUPPORTS_GLFW_FOR_WINDOWING=OFF',
+	'-DDAWN_ENABLE_PIC=ON',
+	'-DDAWN_ENABLE_SPIRV_VALIDATION=ON',
+	'-DDAWN_ALWAYS_ASSERT=ON',
 	crossCompileFlag,
-	backendFlag,
+	...backendFlags,
 ].filter(Boolean).join(' ')}`, {
 	stdio: 'inherit',
 	env: {
