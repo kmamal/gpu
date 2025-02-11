@@ -30,7 +30,7 @@ await Fs.promises.mkdir(C.dir.build, { recursive: true })
 let CFLAGS
 let LDFLAGS
 let crossCompileFlag
-let backendFlags
+let backendFlags = []
 if (C.platform === 'darwin') {
 	let arch = process.env.CROSS_COMPILE_ARCH ?? C.arch
 	if (arch === 'x64') { arch = 'x86_64' }
