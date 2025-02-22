@@ -30,7 +30,9 @@
     "clean": "cd scripts && node clean.mjs"
   },
   "dependencies": {
-    "tar": "^7.4.3"
+    "tar": "^7.4.3",
+    "node-addon-api": "^8.3.1",
+    "node-gyp": "^11.1.0"
   },
   "depotTools": {
     "url": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
@@ -41,8 +43,6 @@
     "commit": "ddf744c3326de9291039d88f207981f205c7704a"
   },
   "devDependencies": {
-    "@types/node": "^22.13.1",
-    "node-addon-api": "^8.3.0",
-    "node-gyp": "^11.1.0"
+    "@types/node": "^22.13.5"
   }
 }
