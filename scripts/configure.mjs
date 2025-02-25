@@ -1,5 +1,4 @@
 import Fs from 'fs'
-import Path from 'path'
 import { execSync } from 'child_process'
 import C from './util/common.js'
 
@@ -14,12 +13,6 @@ execSync('gclient sync --no-history -j8 -vvv', {
 		...C.depotTools.env,
 		DEPOT_TOOLS_UPDATE: '0',
 	},
-})
-
-console.log("applying patch")
-
-execSync(`git apply --ignore-space-change --ignore-whitespace ${Path.join(C.dir.root, 'dawn.patch')}`, {
-	stdio: 'inherit',
 })
 
 console.log("configure build in", C.dir.build)

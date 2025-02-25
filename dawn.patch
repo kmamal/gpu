@@ -1,3 +1,90 @@
+diff --git a/DEPS b/DEPS
+index 018c84ffc..dea1ab010 100644
+--- a/DEPS
++++ b/DEPS
+@@ -50,10 +50,10 @@ vars = {
+   # RBE project to download rewrapper config files for. Only needed if
+   # different from the project used in 'rbe_instance'
+   'rewrapper_cfg_project': '',
+-  # reclient CIPD package
+-  'reclient_package': 'infra/rbe/client/',
+-  # reclient CIPD package version
+-  'reclient_version': 're_client_version:0.143.0.518e369-gomaip',
++  # # reclient CIPD package
++  # 'reclient_package': 'infra/rbe/client/',
++  # # reclient CIPD package version
++  # 'reclient_version': 're_client_version:0.143.0.518e369-gomaip',
+   # siso CIPD package version.
+   'siso_version': 'git_revision:0b6159c39573013a79a47f8544200df07a6a74fc',
+ 
+@@ -419,17 +419,17 @@ deps = {
+     'dep_type': 'cipd',
+   },
+ 
+-  # RBE dependencies
+-  'buildtools/reclient': {
+-    'packages': [
+-      {
+-        'package': Var('reclient_package') + '${{platform}}',
+-        'version': Var('reclient_version'),
+-      }
+-    ],
+-    'dep_type': 'cipd',
+-    'condition': 'dawn_standalone',
+-  },
++  # # RBE dependencies
++  # 'buildtools/reclient': {
++  #   'packages': [
++  #     {
++  #       'package': Var('reclient_package') + '${{platform}}',
++  #       'version': Var('reclient_version'),
++  #     }
++  #   ],
++  #   'dep_type': 'cipd',
++  #   'condition': 'dawn_standalone',
++  # },
+ 
+   # Misc dependencies inherited from Tint
+   'third_party/protobuf': {
+@@ -676,22 +676,22 @@ hooks = [
+     ],
+   },
+ 
+-  # Download remote exec cfg files
+-  {
+-    'name': 'fetch_reclient_cfgs',
+-    'pattern': '.',
+-    'condition': 'download_remoteexec_cfg and dawn_standalone',
+-    'action': ['python3',
+-               'buildtools/reclient_cfgs/fetch_reclient_cfgs.py',
+-               '--rbe_instance',
+-               Var('rbe_instance'),
+-               '--reproxy_cfg_template',
+-               'reproxy.cfg.template',
+-               '--rewrapper_cfg_project',
+-               Var('rewrapper_cfg_project'),
+-               '--quiet',
+-               ],
+-  },
++  # # Download remote exec cfg files
++  # {
++  #   'name': 'fetch_reclient_cfgs',
++  #   'pattern': '.',
++  #   'condition': 'download_remoteexec_cfg and dawn_standalone',
++  #   'action': ['python3',
++  #              'buildtools/reclient_cfgs/fetch_reclient_cfgs.py',
++  #              '--rbe_instance',
++  #              Var('rbe_instance'),
++  #              '--reproxy_cfg_template',
++  #              'reproxy.cfg.template',
++  #              '--rewrapper_cfg_project',
++  #              Var('rewrapper_cfg_project'),
++  #              '--quiet',
++  #              ],
++  # },
+   # Configure Siso for developer builds.
+   {
+     'name': 'configure_siso',
 diff --git a/include/webgpu/webgpu_sdl.h b/include/webgpu/webgpu_sdl.h
 new file mode 100644
 index 000000000..98ae22ee3
