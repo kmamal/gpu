@@ -5,6 +5,7 @@
 /build/
 /dist/
 /publish/
+/scripts/clean.mjs
 /scripts/install-deps-mac.sh
 /scripts/install-deps-ubuntu.sh
 /scripts/install-deps-windows.cmd
