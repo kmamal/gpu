@@ -178,7 +178,7 @@ index d8860f618..cd4716fda 100644
      "${PROJECT_SOURCE_DIR}"
      "${NODE_ADDON_API_DIR}"
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index 0ac36d0e3..450b9d18e 100644
+index 0ac36d0e3..220e420eb 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -30,11 +30,17 @@
@@ -334,7 +334,7 @@ index 0ac36d0e3..450b9d18e 100644
 +    WGPUTextureFormat _wgpuPreferredFormat;
 +
 +    void _createSurface(const Napi::Env &env) {
-+        Napi::Buffer<char> buffer = { env, _window.Get("_native") };
++        Napi::Buffer<char> buffer = { env, _window.Get("_native").As<Napi::Object>().Get("gpu") };
 +        _wgpuSurface = wgpu::sdl::CreateSurfaceForWindow(procs, _wgpuInstance, buffer.Data());
 +
 +        WGPUSurfaceCapabilities wgpuCapabilities = {};
