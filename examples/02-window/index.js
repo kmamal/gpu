@@ -7,8 +7,6 @@ import gpu from '@kmamal/gpu'
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 const window = sdl.video.createWindow({ webgpu: true })
 const { pixelWidth: width, pixelHeight: height } = window
@@ -51,10 +49,10 @@ const positionBuffer = createBuffer(positions, gpu.GPUBufferUsage.VERTEX)
 const colorBuffer = createBuffer(colors, gpu.GPUBufferUsage.VERTEX)
 const indexBuffer = createBuffer(indices, gpu.GPUBufferUsage.INDEX)
 
-const vertexShaderFile = path.join(__dirname, 'vertex.wgsl')
+const vertexShaderFile = path.join(import.meta.dirname, 'vertex.wgsl')
 const vertexShaderCode = await fs.promises.readFile(vertexShaderFile, 'utf8')
 
-const fragmentShaderFile = path.join(__dirname, 'fragment.wgsl')
+const fragmentShaderFile = path.join(import.meta.dirname, 'fragment.wgsl')
 const fragmentShaderCode = await fs.promises.readFile(fragmentShaderFile, 'utf8')
 
 const pipeline = device.createRenderPipeline({

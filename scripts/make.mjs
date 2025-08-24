@@ -15,7 +15,12 @@ execSync(`ninja -v -C ${C.dir.build} dawn.node`, {
 console.log("copy to", C.dir.dist)
 await Fs.promises.rm(C.dir.dist, { recursive: true }).catch(() => {})
 await Fs.promises.mkdir(C.dir.dist, { recursive: true })
-await Fs.promises.copyFile(
+await Fs.promises.cp(
 	Path.join(C.dir.build, 'dawn.node'),
 	Path.join(C.dir.dist, 'dawn.node'),
 )
+
+// Strip binaries on linux
+if (C.platform === 'linux') {
+	execSync(`strip -s ${Path.join(C.dir.dist, 'dawn.node')}`)
+}

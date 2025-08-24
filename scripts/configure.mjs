@@ -3,7 +3,7 @@ import { execSync } from 'child_process'
 import C from './util/common.js'
 
 process.chdir(C.dir.dawn)
-await Fs.promises.copyFile('scripts/standalone-with-node.gclient', '.gclient')
+await Fs.promises.cp('scripts/standalone-with-node.gclient', '.gclient')
 
 console.log("run gclient sync")
 execSync('gclient sync --no-history -j8 -vvv', {

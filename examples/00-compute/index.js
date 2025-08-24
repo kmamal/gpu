@@ -1,12 +1,10 @@
-// 
+//
 // Based on [this article](https://web.dev/gpu-compute/) written by [François Beaufort](https://github.com/beaufortfrancois)
-// 
+//
 
 import gpu from '@kmamal/gpu'
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 const instance = gpu.create([ 'verbose=1' ])
 const adapter = await instance.requestAdapter()
@@ -55,7 +53,7 @@ const gpuReadBuffer = device.createBuffer({
 	usage: gpu.GPUBufferUsage.COPY_DST | gpu.GPUBufferUsage.MAP_READ,
 })
 
-const computeShaderFile = path.join(__dirname, 'compute.wgsl')
+const computeShaderFile = path.join(import.meta.dirname, 'compute.wgsl')
 const computeShaderCode = await fs.promises.readFile(computeShaderFile, 'utf8')
 
 const computePipeline = device.createComputePipeline({

@@ -50,7 +50,7 @@ jobs:
           scripts/install-deps-windows.cmd
 
       - if: ${{ startsWith(matrix.platform.os, 'macos-') }}
-        run: ./scripts/install-deps-mac.sh
+        run: brew update && ./scripts/install-deps-mac.sh
 
       - env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

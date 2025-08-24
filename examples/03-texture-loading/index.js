@@ -4,8 +4,6 @@ import { PNG } from 'pngjs'
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 const window = sdl.video.createWindow({ webgpu: true })
 const { pixelWidth: width, pixelHeight: height } = window
@@ -16,7 +14,7 @@ const device = await adapter.requestDevice()
 const renderer = gpu.renderGPUDeviceToWindow({ device, window })
 
 
-const shaderFile = path.join(__dirname, 'shaders.wgsl')
+const shaderFile = path.join(import.meta.dirname, 'shaders.wgsl')
 const shaderCode = await fs.promises.readFile(shaderFile, 'utf8')
 const shaderModule = device.createShaderModule({ code: shaderCode })
 
@@ -55,7 +53,7 @@ const indices = new Uint16Array([
 const indexBuffer = createBuffer(indices, gpu.GPUBufferUsage.INDEX)
 
 
-const pngFile = path.join(__dirname, 'assets/image.png')
+const pngFile = path.join(import.meta.dirname, 'assets/image.png')
 const pngData = await fs.promises.readFile(pngFile)
 const image = PNG.sync.read(pngData)
 
