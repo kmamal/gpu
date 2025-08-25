@@ -19,7 +19,7 @@ const { platform, arch } = process
 const targetArch = process.env.CROSS_COMPILE_ARCH || arch
 const assetName = `dawn-v${version}-${platform}-${targetArch}.tar.gz`
 
-const { depotTools, dawn } = pkg
+const { config: { depotTools, dawn } } = pkg
 depotTools.env = platform === 'win32' ? {
 	DEPOT_TOOLS_WIN_TOOLCHAIN: '0',
 	PATH: `${dir.depotTools};${process.env.PATH}`,

@@ -32,13 +32,15 @@
   "dependencies": {
     "tar": "^7.4.3"
   },
-  "depotTools": {
-    "url": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
-    "commit": "cf5b6bd0cbc9a4a149818d0306a73723ddce5903"
-  },
-  "dawn": {
-    "url": "https://dawn.googlesource.com/dawn",
-    "commit": "ddf744c3326de9291039d88f207981f205c7704a"
+  "config": {
+    "depotTools": {
+      "url": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
+      "commit": "5b7fcc4bb71bbbf952a5283fbd621256905be31b"
+    },
+    "dawn": {
+      "url": "https://dawn.googlesource.com/dawn",
+      "commit": "66ac94c5ff83af2994f349678d92f435d1ae97bc"
+    }
   },
   "devDependencies": {
     "@types/node": "^22.13.5",

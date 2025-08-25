@@ -33,14 +33,16 @@ if (C.platform === 'darwin') {
 	if (C.targetArch === 'arm64') {
 		CFLAGS = '-mmacosx-version-min=11.0'
 		LDFLAGS = '-mmacosx-version-min=11.0'
-	} else {
+	}
+	else {
 		CFLAGS = [
 			'-mmacosx-version-min=10.9',
 			'-DMAC_OS_X_VERSION_MIN_REQUIRED=1070',
 		].join(' ')
 		LDFLAGS = '-mmacosx-version-min=10.9'
 	}
-} else if (C.platform === 'linux') {
+}
+else if (C.platform === 'linux') {
 	backendFlags = [
 		'-DDAWN_USE_X11=ON',
 		'-DDAWN_USE_WAYLAND=OFF',

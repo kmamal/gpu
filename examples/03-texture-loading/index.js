@@ -8,9 +8,11 @@ import path from 'node:path'
 const window = sdl.video.createWindow({ webgpu: true })
 const { pixelWidth: width, pixelHeight: height } = window
 
-const instance = gpu.create([ "verbose=1" ])
+const instance = gpu.create([ 'verbose=1', 'enable-dawn-features=allow_unsafe_apis' ])
 const adapter = await instance.requestAdapter()
-const device = await adapter.requestDevice()
+const device = await adapter.requestDevice({
+	requiredFeatures: [ 'texture-component-swizzle' ],
+})
 const renderer = gpu.renderGPUDeviceToWindow({ device, window })
 
 
