@@ -1,4 +1,5 @@
 import Fs from 'fs'
+import Path from 'path'
 import { execSync } from 'child_process'
 import C from './util/common.js'
 
@@ -15,6 +16,14 @@ execSync('gclient sync --no-history -j8 -vvv', {
 	},
 })
 
+console.log("applying abseil-cpp.patch")
+process.chdir(C.dir.abseil)
+execSync(`git apply --ignore-space-change --ignore-whitespace ${Path.join(C.dir.root, 'abseil-cpp.patch')}`, {
+	stdio: 'inherit',
+})
+
+
+process.chdir(C.dir.dawn)
 console.log("configure build in", C.dir.build)
 
 await Fs.promises.rm(C.dir.build, { recursive: true }).catch(() => {})

@@ -17,7 +17,7 @@ execSync([
 	cwd: C.dir.root,
 })
 
-console.log("applying patch")
+console.log("applying dawn.patch")
 process.chdir(C.dir.dawn)
 execSync(`git apply --ignore-space-change --ignore-whitespace ${Path.join(C.dir.root, 'dawn.patch')}`, {
 	stdio: 'inherit',

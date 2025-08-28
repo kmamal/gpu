@@ -5,6 +5,7 @@ const dir = {}
 dir.root = Path.resolve(__dirname, '../..')
 dir.depotTools = Path.join(dir.root, 'depot_tools')
 dir.dawn = Path.join(dir.root, 'dawn')
+dir.abseil = Path.join(dir.root, 'dawn/third_party/abseil-cpp')
 dir.build = Path.join(dir.root, 'build')
 dir.dist = Path.join(dir.root, 'dist')
 dir.publish = Path.join(dir.root, 'publish')
