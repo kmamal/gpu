@@ -5,8 +5,7 @@ import { PNG } from 'pngjs'
 import fs from 'node:fs'
 import path from 'node:path'
 
-const window = sdl.video.createWindow({ webgpu: true })
-const { pixelWidth: width, pixelHeight: height } = window
+const window = sdl.video.createWindow({ webgpu: true, resizable: true })
 
 const instance = gpu.create([ 'verbose=1', 'enable-dawn-features=allow_unsafe_apis' ])
 const adapter = await instance.requestAdapter()
@@ -14,6 +13,8 @@ const device = await adapter.requestDevice({
 	requiredFeatures: [ 'texture-component-swizzle' ],
 })
 const renderer = gpu.renderGPUDeviceToWindow({ device, window })
+
+window.on('resize', () => { renderer.resize() })
 
 
 const shaderFile = path.join(import.meta.dirname, 'shaders.wgsl')
@@ -138,14 +139,14 @@ const bindGroup = device.createBindGroup({
 const render = () => {
 	if (window.destroyed) { return }
 
-	const colorTextureView = renderer.getCurrentTextureView()
+	const { pixelWidth: width, pixelHeight: height } = window
 
 	const commandEncoder = device.createCommandEncoder()
 
 	const renderPass = commandEncoder.beginRenderPass({
 		colorAttachments: [
 			{
-				view: colorTextureView,
+				view: renderer.getCurrentTextureView(),
 				clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
 				loadOp: 'clear',
 				storeOp: 'store',
