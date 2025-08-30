@@ -8,13 +8,15 @@ import gpu from '@kmamal/gpu'
 import fs from 'node:fs'
 import path from 'node:path'
 
-const window = sdl.video.createWindow({ webgpu: true })
-const { pixelWidth: width, pixelHeight: height } = window
+const window = sdl.video.createWindow({ webgpu: true, resizable: true })
 
 const instance = gpu.create([ 'verbose=1' ])
 const adapter = await instance.requestAdapter()
 const device = await adapter.requestDevice()
 const renderer = gpu.renderGPUDeviceToWindow({ device, window })
+
+window.on('resize', () => { renderer.resize() })
+
 
 const positions = new Float32Array([
 	...[ 1.0, -1.0, 0.0 ],
@@ -97,6 +99,8 @@ const pipeline = device.createRenderPipeline({
 
 const render = () => {
 	if (window.destroyed) { return }
+
+	const { pixelWidth: width, pixelHeight: height } = window
 
 	const commandEncoder = device.createCommandEncoder()
 
