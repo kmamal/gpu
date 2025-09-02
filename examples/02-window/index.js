@@ -1,7 +1,3 @@
-//
-// Based on [this article](https://alain.xyz/blog/raw-webgpu) written by [Alain Galvan](https://github.com/alaingalvan)
-//
-
 import sdl from '@kmamal/sdl'
 import gpu from '@kmamal/gpu'
 
