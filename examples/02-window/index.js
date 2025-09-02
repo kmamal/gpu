@@ -19,9 +19,9 @@ window.on('resize', () => { renderer.resize() })
 
 
 const positions = new Float32Array([
-	...[ 1.0, -1.0, 0.0 ],
-	...[ -1.0, -1.0, 0.0 ],
-	...[ 0.0, 1.0, 0.0 ],
+	...[ +1.0, -1.0 ],
+	...[ -1.0, -1.0 ],
+	...[ +0.0, +1.0 ],
 ])
 
 const colors = new Float32Array([
@@ -51,27 +51,25 @@ const positionBuffer = createBuffer(positions, gpu.GPUBufferUsage.VERTEX)
 const colorBuffer = createBuffer(colors, gpu.GPUBufferUsage.VERTEX)
 const indexBuffer = createBuffer(indices, gpu.GPUBufferUsage.INDEX)
 
-const vertexShaderFile = path.join(import.meta.dirname, 'vertex.wgsl')
-const vertexShaderCode = await fs.promises.readFile(vertexShaderFile, 'utf8')
-
-const fragmentShaderFile = path.join(import.meta.dirname, 'fragment.wgsl')
-const fragmentShaderCode = await fs.promises.readFile(fragmentShaderFile, 'utf8')
+const shaderFile = path.join(import.meta.dirname, 'shaders.wgsl')
+const shaderCode = await fs.promises.readFile(shaderFile, 'utf8')
+const shaderModule = device.createShaderModule({ code: shaderCode })
 
 const pipeline = device.createRenderPipeline({
 	layout: 'auto',
 	vertex: {
-		module: device.createShaderModule({ code: vertexShaderCode }),
-		entryPoint: 'main',
+		module: shaderModule,
+		entryPoint: 'vertex_main',
 		buffers: [
 			{
 				attributes: [
 					{
 						shaderLocation: 0,
 						offset: 0,
-						format: 'float32x3',
+						format: 'float32x2',
 					},
 				],
-				arrayStride: 3 * Float32Array.BYTES_PER_ELEMENT,
+				arrayStride: 2 * Float32Array.BYTES_PER_ELEMENT,
 				stepMode: 'vertex',
 			},
 			{
@@ -88,8 +86,8 @@ const pipeline = device.createRenderPipeline({
 		],
 	},
 	fragment: {
-		module: device.createShaderModule({ code: fragmentShaderCode }),
-		entryPoint: 'main',
+		module: shaderModule,
+		entryPoint: 'fragment_main',
 		targets: [ { format: renderer.getPreferredFormat() } ],
 	},
 	primitive: {
@@ -120,7 +118,7 @@ const render = () => {
 	renderPass.setVertexBuffer(0, positionBuffer)
 	renderPass.setVertexBuffer(1, colorBuffer)
 	renderPass.setIndexBuffer(indexBuffer, 'uint16')
-	renderPass.drawIndexed(3)
+	renderPass.drawIndexed(indices.length)
 	renderPass.end()
 
 	device.queue.submit([ commandEncoder.finish() ])

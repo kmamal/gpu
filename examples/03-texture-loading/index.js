@@ -38,20 +38,16 @@ const createBuffer = (arr, usage) => {
 }
 
 const vertices = new Float32Array([
-	/* eslint-disable @stylistic/array-element-newline */
-	-1.0, -1.0,
-	+1.0, -1.0,
-	+1.0, +1.0,
-	-1.0, +1.0,
-	/* eslint-enable @stylistic/array-element-newline */
+	...[ -1.0, -1.0 ],
+	...[ +1.0, -1.0 ],
+	...[ +1.0, +1.0 ],
+	...[ -1.0, +1.0 ],
 ])
 const vertexBuffer = createBuffer(vertices, gpu.GPUBufferUsage.VERTEX)
 
 const indices = new Uint16Array([
-	/* eslint-disable @stylistic/array-element-newline */
-	0, 1, 2,
-	2, 3, 0,
-	/* eslint-enable @stylistic/array-element-newline */
+	...[ 0, 1, 2 ],
+	...[ 2, 3, 0 ],
 ])
 const indexBuffer = createBuffer(indices, gpu.GPUBufferUsage.INDEX)
 
@@ -102,7 +98,7 @@ const pipeline = device.createRenderPipeline({
 	}),
 	vertex: {
 		module: shaderModule,
-		entryPoint: 'vert_main',
+		entryPoint: 'vertex_main',
 		buffers: [
 			{
 				attributes: [
@@ -119,7 +115,7 @@ const pipeline = device.createRenderPipeline({
 	},
 	fragment: {
 		module: shaderModule,
-		entryPoint: 'frag_main',
+		entryPoint: 'fragment_main',
 		targets: [ { format: renderer.getPreferredFormat() } ],
 	},
 	primitive: {
