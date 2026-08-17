@@ -20,6 +20,12 @@ await Fs.promises.cp(
 	Path.join(C.dir.dist, 'dawn.node'),
 )
 
+// Include Dawn's license
+await Fs.promises.cp(
+	Path.join(C.dir.dawn, 'LICENSE'),
+	Path.join(C.dir.dist, 'LICENSE.dawn'),
+)
+
 // Strip binaries on linux
 if (C.platform === 'linux') {
 	execSync(`strip -s ${Path.join(C.dir.dist, 'dawn.node')}`)
