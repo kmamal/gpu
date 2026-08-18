@@ -1,7 +1,9 @@
 import Fs from 'fs'
 import Path from 'path'
+import Zlib from 'zlib'
+import Stream from 'stream'
 import C from './util/common.js'
-import * as Tar from 'tar'
+import { packTar } from 'modern-tar/fs'
 
 const commonHeaders = {
 	"Accept": 'application/vnd.github+json',
@@ -48,10 +50,10 @@ await Fs.promises.rm(C.dir.publish, { recursive: true }).catch(() => {})
 await Fs.promises.mkdir(C.dir.publish, { recursive: true })
 const assetPath = Path.join(C.dir.publish, C.assetName)
 
-process.chdir(C.dir.dist)
-await Tar.create(
-	{ gzip: true, file: assetPath },
-	await Fs.promises.readdir('.'),
+await Stream.promises.pipeline(
+	packTar(C.dir.dist),
+	Zlib.createGzip(),
+	Fs.createWriteStream(assetPath),
 )
 const buffer = await Fs.promises.readFile(assetPath)
 
