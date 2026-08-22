@@ -24,9 +24,10 @@ const colorTexture = device.createTexture({
 })
 const colorTextureView = colorTexture.createView()
 
-const bufferSize = width * height * 4
+// copyTextureToBuffer requires bytesPerRow to be a multiple of 256
+const bytesPerRow = Math.ceil((width * 4) / 256) * 256
 const readBuffer = device.createBuffer({
-	size: bufferSize,
+	size: bytesPerRow * height,
 	usage: gpu.GPUBufferUsage.COPY_DST | gpu.GPUBufferUsage.MAP_READ,
 })
 
@@ -132,7 +133,7 @@ renderPass.end()
 
 commandEncoder.copyTextureToBuffer(
 	{ texture: colorTexture },
-	{ buffer: readBuffer, bytesPerRow: width * 4 },
+	{ buffer: readBuffer, bytesPerRow },
 	{ width, height },
 )
 
@@ -140,7 +141,7 @@ device.queue.submit([ commandEncoder.finish() ])
 
 await readBuffer.mapAsync(gpu.GPUMapMode.READ)
 const resultBuffer = new Uint8Array(readBuffer.getMappedRange())
-window.render(width, height, width * 4, 'rgba32', Buffer.from(resultBuffer))
+window.render(width, height, bytesPerRow, 'rgba32', Buffer.from(resultBuffer))
 
 window.on('close', () => {
 	device.destroy()
