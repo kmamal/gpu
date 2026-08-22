@@ -36,9 +36,7 @@ const viewportBuffer = device.createBuffer({
 	usage: gpu.GPUBufferUsage.UNIFORM | gpu.GPUBufferUsage.COPY_DST,
 })
 
-window.on('resize', () => {
-	renderer.resize()
-
+const updateViewport = () => {
 	const factorX = Math.floor(window.pixelWidth / TARGET_WIDTH)
 	const factorY = Math.floor(window.pixelHeight / TARGET_HEIGHT)
 	const factor = Math.min(factorX, factorY)
@@ -56,7 +54,15 @@ window.on('resize', () => {
 		viewportHeight,
 	])
 	device.queue.writeBuffer(viewportBuffer, 0, viewportData)
+}
+
+// The window's initial resize event fired before this script got a chance
+// to attach a listener, so update the viewport once manually.
+window.on('resize', () => {
+	renderer.resize()
+	updateViewport()
 })
+updateViewport()
 
 
 const positions = new Float32Array([
