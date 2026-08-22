@@ -5,4 +5,5 @@ apt-get install -y \
 	libxrandr-dev \
 	libxinerama-dev \
 	libxcursor-dev \
-	libxi-dev
+	libxi-dev \
+	libwayland-dev

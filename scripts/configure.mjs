@@ -54,7 +54,7 @@ if (C.platform === 'darwin') {
 else if (C.platform === 'linux') {
 	backendFlags = [
 		'-DDAWN_USE_X11=ON',
-		'-DDAWN_USE_WAYLAND=OFF',
+		'-DDAWN_USE_WAYLAND=ON',
 	]
 }
 

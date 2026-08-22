@@ -651,10 +651,10 @@ index 00000000..f8f8a79c
 +add_library(webgpu_sdl ALIAS dawn_sdl)
 diff --git a/src/dawn/sdl/utils.cpp b/src/dawn/sdl/utils.cpp
 new file mode 100644
-index 00000000..a774d8ca
+index 000000000..a774d8cae
 --- /dev/null
 +++ b/src/dawn/sdl/utils.cpp
-@@ -0,0 +1,107 @@
+@@ -0,0 +1,129 @@
 +// Copyright 2020 The Dawn & Tint Authors
 +//
 +// Redistribution and use in source and binary forms, with or without
@@ -682,6 +682,7 @@ index 00000000..a774d8ca
 +// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 +// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 +
++#include <cstdint>
 +#include <cstdlib>
 +#include <memory>
 +#include <utility>
@@ -702,11 +703,12 @@ index 00000000..a774d8ca
 +    struct NativeData {
 +        CALayer *layer;
 +    };
-+#elif defined(DAWN_USE_X11)
-+    #include <X11/Xlib.h>
++#elif defined(DAWN_USE_X11) || defined(DAWN_USE_WAYLAND)
++    // Tagged payload shared with @kmamal/sdl (see sdl's window.native docs)
 +    struct NativeData {
-+        Display* display;
-+        Window window;
++        uint64_t subsystem;  // 1 = x11, 2 = wayland
++        void* display;       // Display* | wl_display*
++        uintptr_t window;    // Window XID | wl_surface*
 +    };
 +#endif
 +
@@ -734,18 +736,38 @@ index 00000000..a774d8ca
 +            delete reinterpret_cast<WGPUSurfaceSourceMetalLayer*>(desc);
 +        }
 +    };
-+#elif defined(DAWN_USE_X11)
-+    WGPUSurfaceSourceXlibWindow* desc = new WGPUSurfaceSourceXlibWindow();
-+    desc->chain.next = nullptr;
-+    desc->chain.sType = WGPUSType_SurfaceSourceXlibWindow;
-+    desc->display = native->display;
-+    desc->window = native->window;
-+    return {
-+        reinterpret_cast<WGPUChainedStruct*>(desc),
-+        [](WGPUChainedStruct* desc) {
-+            delete reinterpret_cast<WGPUSurfaceSourceXlibWindow*>(desc);
-+        }
-+    };
++#elif defined(DAWN_USE_X11) || defined(DAWN_USE_WAYLAND)
++#if defined(DAWN_USE_X11)
++    if (native->subsystem == 1) {
++        WGPUSurfaceSourceXlibWindow* desc = new WGPUSurfaceSourceXlibWindow();
++        desc->chain.next = nullptr;
++        desc->chain.sType = WGPUSType_SurfaceSourceXlibWindow;
++        desc->display = native->display;
++        desc->window = native->window;
++        return {
++            reinterpret_cast<WGPUChainedStruct*>(desc),
++            [](WGPUChainedStruct* desc) {
++                delete reinterpret_cast<WGPUSurfaceSourceXlibWindow*>(desc);
++            }
++        };
++    }
++#endif
++#if defined(DAWN_USE_WAYLAND)
++    if (native->subsystem == 2) {
++        WGPUSurfaceSourceWaylandSurface* desc = new WGPUSurfaceSourceWaylandSurface();
++        desc->chain.next = nullptr;
++        desc->chain.sType = WGPUSType_SurfaceSourceWaylandSurface;
++        desc->display = native->display;
++        desc->surface = reinterpret_cast<void*>(native->window);
++        return {
++            reinterpret_cast<WGPUChainedStruct*>(desc),
++            [](WGPUChainedStruct* desc) {
++                delete reinterpret_cast<WGPUSurfaceSourceWaylandSurface*>(desc);
++            }
++        };
++    }
++#endif
++    return { nullptr, [](WGPUChainedStruct*) {} };
 +#else
 +    return { nullptr, [](WGPUChainedStruct*) {} };
 +#endif
