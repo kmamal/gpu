@@ -4,7 +4,7 @@ import { execSync } from 'child_process'
 import C from './util/common.js'
 
 console.log("build in", C.dir.build)
-execSync(`ninja -v -C ${C.dir.build} dawn.node`, {
+execSync(`ninja -v -C "${C.dir.build}" dawn.node`, {
 	stdio: 'inherit',
 	env: {
 		...process.env,
@@ -28,5 +28,5 @@ await Fs.promises.cp(
 
 // Strip binaries on linux
 if (C.platform === 'linux') {
-	execSync(`strip -s ${Path.join(C.dir.dist, 'dawn.node')}`)
+	execSync(`strip -s "${Path.join(C.dir.dist, 'dawn.node')}"`)
 }

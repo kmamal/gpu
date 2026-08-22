@@ -18,7 +18,7 @@ execSync('gclient sync --no-history -j8 -vvv', {
 
 console.log("applying abseil-cpp.patch")
 process.chdir(C.dir.abseil)
-execSync(`git apply --ignore-space-change --ignore-whitespace ${Path.join(C.dir.root, 'abseil-cpp.patch')}`, {
+execSync(`git apply --ignore-space-change --ignore-whitespace "${Path.join(C.dir.root, 'abseil-cpp.patch')}"`, {
 	stdio: 'inherit',
 })
 

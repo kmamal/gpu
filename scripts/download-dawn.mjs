@@ -6,8 +6,8 @@ import C from './util/common.js'
 console.log("clone", C.dawn.url)
 await Fs.promises.rm(C.dir.dawn, { recursive: true }).catch(() => {})
 execSync([
-	`mkdir ${C.dir.dawn}`,
-	`cd ${C.dir.dawn}`,
+	`mkdir "${C.dir.dawn}"`,
+	`cd "${C.dir.dawn}"`,
 	'git init',
 	`git remote add origin ${C.dawn.url}`,
 	`git fetch --depth 1 origin ${C.dawn.commit}`,
@@ -19,6 +19,6 @@ execSync([
 
 console.log("applying dawn.patch")
 process.chdir(C.dir.dawn)
-execSync(`git apply --ignore-space-change --ignore-whitespace ${Path.join(C.dir.root, 'dawn.patch')}`, {
+execSync(`git apply --ignore-space-change --ignore-whitespace "${Path.join(C.dir.root, 'dawn.patch')}"`, {
 	stdio: 'inherit',
 })

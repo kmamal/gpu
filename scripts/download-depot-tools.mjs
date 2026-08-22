@@ -5,8 +5,8 @@ import C from './util/common.js'
 console.log("clone", C.depotTools.url)
 await Fs.promises.rm(C.dir.depotTools, { recursive: true }).catch(() => {})
 execSync([
-	`mkdir ${C.dir.depotTools}`,
-	`cd ${C.dir.depotTools}`,
+	`mkdir "${C.dir.depotTools}"`,
+	`cd "${C.dir.depotTools}"`,
 	'git init',
 	`git remote add origin ${C.depotTools.url}`,
 	`git fetch --depth 1 origin ${C.depotTools.commit}`,
