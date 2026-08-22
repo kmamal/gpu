@@ -4,28 +4,43 @@ const {
 	globals,
 } = require('../dist/dawn.node')
 
-const instances = new Set()
+// The addon does nothing to hold the event loop open, so while instances
+// exist the process is kept alive with a ref'd (but otherwise useless)
+// interval. Instances are tracked without strong references: an instance
+// that gets garbage collected without an explicit destroy() releases its
+// hold on the process via the FinalizationRegistry.
 
-const fn = () => { instances.delete(null) }
+let numInstances = 0
 let interval = null
+
+const instanceAdded = () => {
+	if (numInstances++ === 0) {
+		interval = setInterval(() => {}, 60e3)
+	}
+}
+
+const instanceRemoved = () => {
+	if (--numInstances === 0) {
+		clearInterval(interval)
+		interval = null
+	}
+}
+
+const instances = new WeakSet()
+const registry = new FinalizationRegistry(instanceRemoved)
 
 const create = (...args) => {
 	const instance = _create(...args)
-
-	if (instances.size === 0) {
-		interval = setInterval(fn, 60e3)
-	}
 	instances.add(instance)
-
+	registry.register(instance, null, instance)
+	instanceAdded()
 	return instance
 }
 
 const destroy = (instance) => {
-	instances.delete(instance)
-	if (instances.size === 0) {
-		clearInterval(interval)
-		interval = null
-	}
+	if (!instances.delete(instance)) { return }
+	registry.unregister(instance)
+	instanceRemoved()
 }
 
 module.exports = {
