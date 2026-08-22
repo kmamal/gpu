@@ -1,20 +1,20 @@
 diff --git a/DEPS b/DEPS
-index f16fbd1f..5ca2a73b 100644
+index bd9d4a5f6..5bc659e9a 100644
 --- a/DEPS
 +++ b/DEPS
-@@ -46,9 +46,9 @@ vars = {
+@@ -52,9 +52,9 @@ vars = {
    # different from the project used in 'rbe_instance'
    'rewrapper_cfg_project': '',
    # reclient CIPD package
 -  'reclient_package': 'infra/rbe/client/',
 +  # 'reclient_package': 'infra/rbe/client/',
    # reclient CIPD package version
--  'reclient_version': 're_client_version:0.176.0.8c46330a-gomaip',
-+  # 'reclient_version': 're_client_version:0.176.0.8c46330a-gomaip',
+-  'reclient_version': 're_client_version:0.185.0.db415f21-gomaip',
++  # 'reclient_version': 're_client_version:0.185.0.db415f21-gomaip',
    # siso CIPD package version.
-   'siso_version': 'git_revision:15568691576f74b11a3c73c85a3c8dd5efb72f05',
+   'siso_version': 'git_revision:bc45e8f67ae0f37d337190ad64aa8bb440c791eb',
  
-@@ -429,17 +429,17 @@ deps = {
+@@ -667,17 +667,17 @@ deps = {
      'dep_type': 'cipd',
    },
  
@@ -43,7 +43,7 @@ index f16fbd1f..5ca2a73b 100644
  
    # Misc dependencies inherited from Tint
    'third_party/protobuf': {
-@@ -687,53 +687,53 @@ hooks = [
+@@ -999,53 +999,53 @@ hooks = [
    },
  
    # Configure remote exec cfg files
@@ -52,7 +52,7 @@ index f16fbd1f..5ca2a73b 100644
 -    'name': 'download_and_configure_reclient_cfgs',
 -    'pattern': '.',
 -    'condition': 'dawn_standalone and download_remoteexec_cfg and host_os == "win"',
--    'action': ['python3',
+-    'action': ['vpython3',
 -               'buildtools/reclient_cfgs/configure_reclient_cfgs.py',
 -               '--rbe_instance',
 -               Var('rbe_instance'),
@@ -67,7 +67,7 @@ index f16fbd1f..5ca2a73b 100644
 -    'name': 'download_and_configure_reclient_cfgs',
 -    'pattern': '.',
 -    'condition': 'dawn_standalone and download_remoteexec_cfg and not host_os == "win"',
--    'action': ['python3',
+-    'action': ['vpython3',
 -               'buildtools/reclient_cfgs/configure_reclient_cfgs.py',
 -               '--rbe_instance',
 -               Var('rbe_instance'),
@@ -82,7 +82,7 @@ index f16fbd1f..5ca2a73b 100644
 -    'name': 'configure_reclient_cfgs',
 -    'pattern': '.',
 -    'condition': 'dawn_standalone and not download_remoteexec_cfg',
--    'action': ['python3',
+-    'action': ['vpython3',
 -               'buildtools/reclient_cfgs/configure_reclient_cfgs.py',
 -               '--rbe_instance',
 -               Var('rbe_instance'),
@@ -99,7 +99,7 @@ index f16fbd1f..5ca2a73b 100644
 +  #   'name': 'download_and_configure_reclient_cfgs',
 +  #   'pattern': '.',
 +  #   'condition': 'dawn_standalone and download_remoteexec_cfg and host_os == "win"',
-+  #   'action': ['python3',
++  #   'action': ['vpython3',
 +  #              'buildtools/reclient_cfgs/configure_reclient_cfgs.py',
 +  #              '--rbe_instance',
 +  #              Var('rbe_instance'),
@@ -114,7 +114,7 @@ index f16fbd1f..5ca2a73b 100644
 +  #   'name': 'download_and_configure_reclient_cfgs',
 +  #   'pattern': '.',
 +  #   'condition': 'dawn_standalone and download_remoteexec_cfg and not host_os == "win"',
-+  #   'action': ['python3',
++  #   'action': ['vpython3',
 +  #              'buildtools/reclient_cfgs/configure_reclient_cfgs.py',
 +  #              '--rbe_instance',
 +  #              Var('rbe_instance'),
@@ -129,7 +129,7 @@ index f16fbd1f..5ca2a73b 100644
 +  #   'name': 'configure_reclient_cfgs',
 +  #   'pattern': '.',
 +  #   'condition': 'dawn_standalone and not download_remoteexec_cfg',
-+  #   'action': ['python3',
++  #   'action': ['vpython3',
 +  #              'buildtools/reclient_cfgs/configure_reclient_cfgs.py',
 +  #              '--rbe_instance',
 +  #              Var('rbe_instance'),
@@ -146,7 +146,7 @@ index f16fbd1f..5ca2a73b 100644
      'name': 'configure_siso',
 diff --git a/include/webgpu/webgpu_sdl.h b/include/webgpu/webgpu_sdl.h
 new file mode 100644
-index 00000000..98ae22ee
+index 000000000..98ae22ee3
 --- /dev/null
 +++ b/include/webgpu/webgpu_sdl.h
 @@ -0,0 +1,60 @@
@@ -211,10 +211,10 @@ index 00000000..98ae22ee
 +
 +#endif  // INCLUDE_WEBGPU_WEBGPU_SDL_H_
 diff --git a/src/dawn/CMakeLists.txt b/src/dawn/CMakeLists.txt
-index fd2d98fe..5f0b0bad 100644
+index 6bb88aa74..1e78d217c 100644
 --- a/src/dawn/CMakeLists.txt
 +++ b/src/dawn/CMakeLists.txt
-@@ -112,6 +112,8 @@ if (DAWN_BUILD_NODE_BINDINGS)
+@@ -199,6 +199,8 @@ if (DAWN_BUILD_NODE_BINDINGS)
    add_subdirectory(node)
  endif()
  
@@ -224,7 +224,7 @@ index fd2d98fe..5f0b0bad 100644
  # libdawn_proc
  #   Only built when not building for Emscripten
 diff --git a/src/dawn/node/CMakeLists.txt b/src/dawn/node/CMakeLists.txt
-index 4ebff350..114937d1 100644
+index f28474bfa..cb98a384e 100644
 --- a/src/dawn/node/CMakeLists.txt
 +++ b/src/dawn/node/CMakeLists.txt
 @@ -113,6 +113,7 @@ target_link_libraries(dawn_node
@@ -236,7 +236,7 @@ index 4ebff350..114937d1 100644
  target_include_directories(dawn_node
      PRIVATE
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index cb70833c..220e420e 100644
+index cb70833c7..220e420eb 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -30,10 +30,17 @@
@@ -478,7 +478,7 @@ index cb70833c..220e420e 100644
  #ifdef DAWN_EMIT_COVERAGE
      Coverage* coverage = new Coverage();
 diff --git a/src/dawn/node/binding/AsyncRunner.cpp b/src/dawn/node/binding/AsyncRunner.cpp
-index 9c16028b..8bd3575f 100644
+index 9c16028b5..8bd3575fa 100644
 --- a/src/dawn/node/binding/AsyncRunner.cpp
 +++ b/src/dawn/node/binding/AsyncRunner.cpp
 @@ -66,7 +66,7 @@ void AsyncRunner::ScheduleProcessEvents(Napi::Env env) {
@@ -507,7 +507,7 @@ index 9c16028b..8bd3575f 100644
  }
  
 diff --git a/src/dawn/node/binding/GPU.h b/src/dawn/node/binding/GPU.h
-index 64c2a35f..2631e749 100644
+index 9345441e9..1dbbf4bbd 100644
 --- a/src/dawn/node/binding/GPU.h
 +++ b/src/dawn/node/binding/GPU.h
 @@ -51,9 +51,10 @@ class GPU final : public interop::GPU {
@@ -523,10 +523,10 @@ index 64c2a35f..2631e749 100644
  };
  
 diff --git a/src/dawn/node/binding/GPUDevice.h b/src/dawn/node/binding/GPUDevice.h
-index 33a0bb55..32eb4994 100644
+index 5e048d595..d401ca5b2 100644
 --- a/src/dawn/node/binding/GPUDevice.h
 +++ b/src/dawn/node/binding/GPUDevice.h
-@@ -130,9 +130,10 @@ class GPUDevice final : public interop::GPUDevice, EventTarget {
+@@ -133,9 +133,10 @@ class GPUDevice final : public interop::GPUDevice, EventTarget {
                                                ErrorType type,
                                                wgpu::StringView message);
  
@@ -540,7 +540,7 @@ index 33a0bb55..32eb4994 100644
      // This promise's JS object lives as long as the device because it is stored in .lost
 diff --git a/src/dawn/sdl/BUILD.gn b/src/dawn/sdl/BUILD.gn
 new file mode 100644
-index 00000000..e21b8881
+index 000000000..e21b8881b
 --- /dev/null
 +++ b/src/dawn/sdl/BUILD.gn
 @@ -0,0 +1,50 @@
@@ -596,7 +596,7 @@ index 00000000..e21b8881
 +}
 diff --git a/src/dawn/sdl/CMakeLists.txt b/src/dawn/sdl/CMakeLists.txt
 new file mode 100644
-index 00000000..f8f8a79c
+index 000000000..f8f8a79cf
 --- /dev/null
 +++ b/src/dawn/sdl/CMakeLists.txt
 @@ -0,0 +1,49 @@
