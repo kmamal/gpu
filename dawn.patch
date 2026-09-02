@@ -687,7 +687,7 @@ index 000000000..a774d8cae
 +#include <memory>
 +#include <utility>
 +
-+#include "dawn/common/Platform.h"
++#include "src/utils/platform.h"
 +#include "webgpu/webgpu_sdl.h"
 +
 +namespace wgpu::sdl {

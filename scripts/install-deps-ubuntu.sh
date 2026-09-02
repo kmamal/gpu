@@ -6,4 +6,5 @@ apt-get install -y \
 	libxinerama-dev \
 	libxcursor-dev \
 	libxi-dev \
-	libwayland-dev
+	libwayland-dev \
+	libgbm-dev
