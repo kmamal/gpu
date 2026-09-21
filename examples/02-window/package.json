@@ -6,5 +6,9 @@
   "dependencies": {
     "@kmamal/gpu": "*",
     "@kmamal/sdl": "*"
+  },
+  "allowScripts": {
+    "@kmamal/gpu": true,
+    "@kmamal/sdl": true
   }
 }

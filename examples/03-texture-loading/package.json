@@ -7,5 +7,9 @@
     "@kmamal/gpu": "*",
     "@kmamal/sdl": "*",
     "pngjs": "*"
+  },
+  "allowScripts": {
+    "@kmamal/gpu": true,
+    "@kmamal/sdl": true
   }
 }
