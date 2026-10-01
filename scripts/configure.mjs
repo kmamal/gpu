@@ -75,6 +75,7 @@ execSync(`cmake ${[
 	'-DDAWN_ENABLE_SPIRV_VALIDATION=ON',
 	'-DDAWN_ALWAYS_ASSERT=ON',
 	'-DDAWN_FORCE_SYSTEM_COMPONENT_LOAD=ON',
+	'-DDAWN_SUPPORTS_CXX_MODULES=OFF',
 	crossCompileFlag,
 	...backendFlags,
 ].filter(Boolean).join(' ')}`, {
