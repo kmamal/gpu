@@ -4,18 +4,18 @@
 [![Dependencies](https://img.shields.io/librariesio/release/npm/@kmamal/gpu)](https://libraries.io/npm/@kmamal%2Fgpu)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-WebGPU for Node.js via [Google Dawn](https://dawn.googlesource.com/dawn/+/refs/heads/main/src/dawn/node/).
-Allows you to use WebGPU without a browser.
+WebGPU to Node.js through [Google Dawn](https://dawn.googlesource.com/dawn/+/refs/heads/main/src/dawn/node/), so you can use WebGPU without a browser.
 
-It should work on Linux (X11 & Wayland), Mac, and Windows.
-Prebuilt binaries are available for x64 & arm architectures, on all supported platforms.
+It should work on Linux (X11 and Wayland), Mac, and Windows.
+Prebuilt binaries exist for x64 and arm architectures on all supported platforms.
 
 
 ## Instructions
 
-Check the [examples](https://github.com/kmamal/gpu/tree/master/examples) for how to use this package.
-You can use both [compute](https://github.com/kmamal/gpu/tree/master/examples/00-compute) and [render](https://github.com/kmamal/gpu/tree/master/examples/01-render) pipelines.
-For render pipelines, you can either render the result to a buffer and save it as an image, or you can use [@kmamal/sdl](https://github.com/kmamal/node-sdl#readme) to render directly to a window as in [this example](https://github.com/kmamal/gpu/tree/master/examples/02-window).
+The [examples](https://github.com/kmamal/gpu/tree/master/examples) show how to use this package.
+The package supports both [compute](https://github.com/kmamal/gpu/tree/master/examples/00-compute) and [render](https://github.com/kmamal/gpu/tree/master/examples/01-render) pipelines.
+A render pipeline can write its result to a buffer that you save as an image.
+It can also draw straight to a window through [@kmamal/sdl](https://github.com/kmamal/node-sdl#readme), as [this example](https://github.com/kmamal/gpu/tree/master/examples/02-window) shows.
 
 
 # API Reference
@@ -57,29 +57,29 @@ Usually you will call `gpu.destroy(instance)` right after calling `device.destro
   * `window: `[`<Window>`](https://github.com/kmamal/node-sdl?tab=readme-ov-file#class-window) The window to render to.
   * `presentMode: <string>` The swapchain mode. Default: `'fifo'`
 
-Crates a Renderer object that is used to connect a device to a window so that the device output renders directly to the window.
+Creates a Renderer object that connects a device to a window, so the device renders directly to the window.
 
 Possible options for `presentMode` are `'fifo'`, `'fifoRelaxed'`, `'immediate'`, and `'mailbox'`.
 
 ### class Renderer
 
-This class is not directly exposed by the API so you can't use it with the new operator.
-Instead, objects returned by [`gpu.renderGPUDeviceToWindow()`](gpurendergpudevicetowindowoptions) are of this type.
+The API does not expose this class, so you can't call it with the new operator.
+Instead, [`gpu.renderGPUDeviceToWindow()`](#gpurendergpudevicetowindowoptions) returns objects of this type.
 
 ### renderer.getCurrentTexture()
 
-Return an object of type [`GPUTexture`](https://developer.mozilla.org/en-US/docs/Web/API/GPUTexture).
-Things drawn to the texture will appear on the window when [`renderer.swap()`](#rendererswap) is called.
+Returns a [`GPUTexture`](https://developer.mozilla.org/en-US/docs/Web/API/GPUTexture).
+Whatever you draw to the texture appears in the window when you call [`renderer.swap()`](#rendererswap).
 
 ### renderer.getCurrentTextureView()
 
-Return an object of type [`GPUTextureView`](https://developer.mozilla.org/en-US/docs/Web/API/GPUTextureView).
-Things drawn to the texture view will appear on the window when [`renderer.swap()`](#rendererswap) is called.
+Returns a [`GPUTextureView`](https://developer.mozilla.org/en-US/docs/Web/API/GPUTextureView).
+Whatever you draw to the texture view appears in the window when you call [`renderer.swap()`](#rendererswap).
 
 ### renderer.swap()
 
-Call this function after your render pass to display the results on the window.
+Call this function after your render pass to show the results in the window.
 
 ### renderer.resize()
 
-Must be called after the window has been resized.
+Call this function after you resize the window.
