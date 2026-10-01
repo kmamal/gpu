@@ -25,6 +25,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - uses: mozilla-actions/sccache-action@v0.0.11
+
       - if: ${{ startsWith(matrix.platform.os, 'ubuntu-') && endsWith(matrix.platform.os, '-arm') }}
         run: |
           curl -fsSL https://go.dev/dl/go1.25.0.linux-arm64.tar.gz > go.tar.gz
@@ -64,4 +66,7 @@ jobs:
       - env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CROSS_COMPILE_ARCH: ${{ matrix.platform.arch }}
+          SCCACHE_GHA_ENABLED: 'true'
+          CMAKE_C_COMPILER_LAUNCHER: sccache
+          CMAKE_CXX_COMPILER_LAUNCHER: sccache
         run: npm run release
