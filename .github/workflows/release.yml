@@ -38,7 +38,8 @@ jobs:
         shell: bash
         run: |
           ARCH=$([[ '${{ matrix.platform.os }}' == *-arm ]] && echo arm64 || echo x64)
-          MSVC_DIR='C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC'
+          VS_DIR=$("/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" -latest -products '*' -property installationPath | tr -d '\r')
+          MSVC_DIR="${VS_DIR//\\//}/VC/Tools/MSVC"
           MSVC_VERSION=$(ls "${MSVC_DIR}" | sort -Vr | head -n1)
           MSVC="${MSVC_DIR}/${MSVC_VERSION}"
           WINSDK_DIR='C:/Program Files (x86)/Windows Kits/10'
