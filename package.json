@@ -40,11 +40,11 @@
     }
   },
   "devDependencies": {
-    "@types/node": "22.13.5",
-    "node-addon-api": "8.3.1",
-    "node-gyp": "11.1.0"
+    "@types/node": "26.6.4",
+    "node-addon-api": "8.9.2",
+    "node-gyp": "13.1.0"
   },
   "dependencies": {
-    "modern-tar": "0.8.4"
+    "modern-tar": "0.8.5"
   }
 }
