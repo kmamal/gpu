@@ -24,9 +24,9 @@ It can also draw straight to a window through [@kmamal/sdl](https://github.com/k
 
 * [Globals](#globals)
 * [gpu.create(flags)](#gpucreateflags)
-* [gpu.destroy(instance)](#gpudestroyinstance)
 * [gpu.renderGPUDeviceToWindow(options)](#gpurendergpudevicetowindowoptions)
 * [class Renderer](#class-renderer)
+  * [renderer.getPreferredFormat()](#renderergetpreferredformat)
   * [renderer.getCurrentTexture()](#renderergetcurrenttexture)
   * [renderer.getCurrentTextureView()](#renderergetcurrenttextureview)
   * [renderer.swap()](#rendererswap)
@@ -45,26 +45,33 @@ The returned object is equivalent to the browser's [`GPU`](https://developer.moz
 Any flags passed to the `create()` function must be in the form of `'key=value'`.
 It is usually a good idea to pass at least the `'verbose=1'` flag to help with debugging.
 
-### gpu.destroy(instance)
-
-Instances created with [`gpu.create()`](#gpucreateflags) need to be cleaned up before the program exits.
-Usually you will call `gpu.destroy(instance)` right after calling `device.destroy()`.
-
 ### gpu.renderGPUDeviceToWindow(options)
 
 * `options: <object>`
   * `device: `[`<GPUDevice>`](http://developer.mozilla.org/en-US/docs/Web/API/GPUDevice) The device to render from.
   * `window: `[`<Window>`](https://github.com/kmamal/node-sdl?tab=readme-ov-file#class-window) The window to render to.
   * `presentMode: <string>` The swapchain mode. Default: `'fifo'`
+  * `format: <string>` The texture format of the window surface. Default: the first format the surface supports.
+  * `usage: <number>` A combination of [`GPUTextureUsage`](https://developer.mozilla.org/en-US/docs/Web/API/GPUTextureUsage) flags for the surface texture. Default: `GPUTextureUsage.RENDER_ATTACHMENT`
 
 Creates a Renderer object that connects a device to a window, so the device renders directly to the window.
 
 Possible options for `presentMode` are `'fifo'`, `'fifoRelaxed'`, `'immediate'`, and `'mailbox'`.
 
+If the requested `format` is not supported by the window, this function throws an error that lists the supported formats.
+Pass `format: 'bgra8unorm'` to match what a browser canvas provides, so shaders have to do their own sRGB encoding.
+The default format may be an `-srgb` one, in which case the hardware encodes the shader output for you.
+Use [`renderer.getPreferredFormat()`](#renderergetpreferredformat) to find out which format was chosen.
+
 ### class Renderer
 
 The API does not expose this class, so you can't call it with the new operator.
 Instead, [`gpu.renderGPUDeviceToWindow()`](#gpurendergpudevicetowindowoptions) returns objects of this type.
+
+### renderer.getPreferredFormat()
+
+Returns the [`GPUTextureFormat`](https://developer.mozilla.org/en-US/docs/Web/API/GPUTextureFormat) of the window surface.
+Use it as the format of the color targets in your render pipelines.
 
 ### renderer.getCurrentTexture()
 
@@ -83,3 +90,5 @@ Call this function after your render pass to show the results in the window.
 ### renderer.resize()
 
 Call this function after you resize the window.
+
+After you call `device.destroy()`, the renderer releases its window surface, and calling [`renderer.swap()`](#rendererswap), [`renderer.resize()`](#rendererresize), or either of the `getCurrentTexture` functions throws an error.

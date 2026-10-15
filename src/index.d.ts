@@ -3086,8 +3086,9 @@ interface WebGPU {
     device: GPUDevice,
     window: any,
     presentMode?: PresentMode,
+    format?: GPUTextureFormat,
+    usage?: GPUTextureUsageFlags,
   }): Renderer
-  destroy(gpu: GPU)
 }
 
 declare const gpu: WebGPU

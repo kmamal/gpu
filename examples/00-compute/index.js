@@ -98,4 +98,3 @@ await gpuReadBuffer.mapAsync(gpu.GPUMapMode.READ)
 console.log(new Float32Array(gpuReadBuffer.getMappedRange()))
 
 device.destroy()
-gpu.destroy(instance)

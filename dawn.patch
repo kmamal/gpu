@@ -188,7 +188,7 @@ index f28474bfa3..cb98a384ee 100644
  target_include_directories(dawn_node
      PRIVATE
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index cb70833c76..008531b2c2 100644
+index cb70833c76..63b2fe2760 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
 @@ -26,6 +26,9 @@
@@ -547,20 +547,18 @@ index cb70833c76..008531b2c2 100644
  #ifdef DAWN_EMIT_COVERAGE
  struct Coverage {
      Coverage() : output_path_{GetOutputPath()} {
-@@ -110,7 +438,12 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
-     exports.Set(Napi::String::New(env, "globals"), wgpu::interop::Initialize(env));
- 
+@@ -112,6 +440,11 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
      // Export function that creates and returns the wgpu::interop::GPU interface
--    exports.Set(Napi::String::New(env, "create"), Napi::Function::New<CreateGPU>(env));
-+    exports.Set(Napi::String::New(env, "_create"), Napi::Function::New<CreateGPU>(env));
-+
+     exports.Set(Napi::String::New(env, "create"), Napi::Function::New<CreateGPU>(env));
+ 
 +    auto rendererCtor = std::make_shared<Napi::FunctionReference>(Napi::Persistent(Renderer::Class(env)));
 +    exports.Set(Napi::String::New(env, "renderGPUDeviceToWindow"), Napi::Function::New(env, [rendererCtor](const Napi::CallbackInfo& info) {
 +        return RenderGPUDeviceToWindow(*rendererCtor, info);
 +    }));
- 
++
  #ifdef DAWN_EMIT_COVERAGE
      Coverage* coverage = new Coverage();
+     auto coverage_provider = Napi::Object::New(env);
 diff --git a/src/dawn/node/binding/AsyncRunner.cpp b/src/dawn/node/binding/AsyncRunner.cpp
 index 9c16028b53..7962603ca1 100644
 --- a/src/dawn/node/binding/AsyncRunner.cpp

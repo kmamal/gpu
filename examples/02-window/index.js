@@ -128,5 +128,4 @@ render()
 
 window.on('close', () => {
 	device.destroy()
-	gpu.destroy(instance)
 })

@@ -145,5 +145,4 @@ window.render(width, height, bytesPerRow, 'rgba32', Buffer.from(resultBuffer))
 
 window.on('close', () => {
 	device.destroy()
-	gpu.destroy(instance)
 })
