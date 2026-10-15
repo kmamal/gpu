@@ -146,10 +146,10 @@ index a8d5121174..294484d604 100644
      'name': 'configure_siso',
 diff --git a/include/webgpu/webgpu_sdl.h b/include/webgpu/webgpu_sdl.h
 new file mode 100644
-index 0000000000..98ae22ee34
+index 0000000000..112eb6bdd6
 --- /dev/null
 +++ b/include/webgpu/webgpu_sdl.h
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,57 @@
 +// Copyright 2022 The Dawn & Tint Authors
 +//
 +// Redistribution and use in source and binary forms, with or without
@@ -180,9 +180,6 @@ index 0000000000..98ae22ee34
 +#ifndef INCLUDE_WEBGPU_WEBGPU_SDL_H_
 +#define INCLUDE_WEBGPU_WEBGPU_SDL_H_
 +
-+#include <memory>
-+
-+#include "dawn/dawn_proc.h"
 +#include "webgpu/webgpu_cpp.h"
 +
 +#if defined(WGPU_SDL_SHARED_LIBRARY)
@@ -205,7 +202,7 @@ index 0000000000..98ae22ee34
 +
 +namespace wgpu::sdl {
 +
-+WGPU_SDL_EXPORT WGPUSurface CreateSurfaceForWindow(const DawnProcTable *procs, const WGPUInstance& instance, void* nativeData);
++WGPU_SDL_EXPORT wgpu::Surface CreateSurfaceForWindow(const wgpu::Instance& instance, void* nativeData);
 +
 +}  // namespace wgpu::sdl
 +
@@ -236,15 +233,19 @@ index f28474bfa3..cb98a384ee 100644
  target_include_directories(dawn_node
      PRIVATE
 diff --git a/src/dawn/node/Module.cpp b/src/dawn/node/Module.cpp
-index cb70833c76..220e420eb7 100644
+index cb70833c76..91910e7a47 100644
 --- a/src/dawn/node/Module.cpp
 +++ b/src/dawn/node/Module.cpp
-@@ -30,10 +30,17 @@
+@@ -26,6 +26,8 @@
+ // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ #include <filesystem>
++#include <map>
++#include <memory>
+ #include <string>
  #include <tuple>
  #include <utility>
- #include <vector>
-+#include <map>
- 
+@@ -34,6 +36,12 @@
  #include "dawn/dawn_proc.h"
  #include "src/dawn/node/binding/Flags.h"
  #include "src/dawn/node/binding/GPU.h"
@@ -257,55 +258,36 @@ index cb70833c76..220e420eb7 100644
  
  #ifdef DAWN_EMIT_COVERAGE
  extern "C" {
-@@ -43,10 +50,21 @@ int __llvm_profile_write_file(void);
- }
- #endif  // DAWN_EMIT_COVERAGE
+@@ -45,6 +53,13 @@ int __llvm_profile_write_file(void);
  
-+const DawnProcTable *procs;
-+
-+Napi::FunctionReference constructor;
-+
-+std::map<std::string, WGPUPresentMode> wgpuPresentModes = {
-+    { "fifo", WGPUPresentMode_Fifo },
-+    { "fifoRelaxed", WGPUPresentMode_FifoRelaxed },
-+    { "immediate", WGPUPresentMode_Immediate },
-+    { "mailbox", WGPUPresentMode_Mailbox }
-+};
-+
  namespace {
  
++const std::map<std::string, wgpu::PresentMode> wgpuPresentModes = {
++    { "fifo", wgpu::PresentMode::Fifo },
++    { "fifoRelaxed", wgpu::PresentMode::FifoRelaxed },
++    { "immediate", wgpu::PresentMode::Immediate },
++    { "mailbox", wgpu::PresentMode::Mailbox }
++};
++
  Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
--    const auto& env = info.Env();
-+    const Napi::Env& env = info.Env();
+     const auto& env = info.Env();
  
-     std::tuple<std::vector<std::string>> args;
-     if (auto res = wgpu::interop::FromJS(info, args); !res) {
-@@ -68,7 +86,174 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
-     }
+@@ -71,6 +86,284 @@ Napi::Value CreateGPU(const Napi::CallbackInfo& info) {
+     return wgpu::interop::GPU::Create<wgpu::binding::GPU>(env, std::move(flags));
+ }
  
-     // Construct a wgpu::interop::GPU interface, implemented by wgpu::bindings::GPU.
--    return wgpu::interop::GPU::Create<wgpu::binding::GPU>(env, std::move(flags));
-+    auto gpu = wgpu::interop::GPU::Create<wgpu::binding::GPU>(env, std::move(flags));
-+    Napi::Object jsGpu = gpu;
-+
-+    return jsGpu;
-+}
-+
 +class Renderer : public Napi::ObjectWrap<Renderer> {
 +
 +public:
 +
-+    static void Init(const Napi::Env &env) {
-+        Napi::Function func = DefineClass(env, "Renderer", {
++    static Napi::Function Class(const Napi::Env &env) {
++        return DefineClass(env, "Renderer", {
 +            InstanceMethod("getPreferredFormat", &Renderer::getPreferredFormat),
 +            InstanceMethod("getCurrentTexture", &Renderer::getCurrentTexture),
 +            InstanceMethod("getCurrentTextureView", &Renderer::getCurrentTextureView),
 +            InstanceMethod("swap", &Renderer::swap),
 +            InstanceMethod("resize", &Renderer::resize),
 +        });
-+
-+        constructor = Napi::Persistent(func);
-+        constructor.SuppressDestruct();
 +    }
 +
 +    Renderer(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Renderer>(info) {
@@ -317,18 +299,34 @@ index cb70833c76..220e420eb7 100644
 +        Napi::Object jsWindow = info[1].As<Napi::Object>();
 +        _window = Napi::Persistent(jsWindow);
 +
-+        Napi::String jsPresentMode = info[2].As<Napi::String>();
-+        _wgpuPresentMode = wgpuPresentModes[jsPresentMode.Utf8Value()];
++        auto presentMode = wgpuPresentModes.find(info[2].As<Napi::String>().Utf8Value());
++        if (presentMode == wgpuPresentModes.end()) {
++            Napi::Error::New(env, "presentMode argument to Renderer has invalid value").ThrowAsJavaScriptException();
++            return;
++        }
++        _wgpuPresentMode = presentMode->second;
 +
-+        _wgpuDevice = reinterpret_cast<wgpu::binding::GPUDevice*>(wgpu::interop::GPUDevice::Unwrap(_device.Value()))->device_.Get();
-+        _wgpuAdapter = procs->deviceGetAdapter(_wgpuDevice);
-+        _wgpuInstance = procs->adapterGetInstance(_wgpuAdapter);
++        if (info[3].IsString()) {
++            _requestedFormat = info[3].As<Napi::String>().Utf8Value();
++        }
++
++        _requestedUsage = info[4].IsNumber() ? info[4].As<Napi::Number>().Uint32Value() : 0;
++
++        auto* gpuDevice = static_cast<wgpu::binding::GPUDevice*>(wgpu::interop::GPUDevice::Unwrap(_device.Value()));
++        _wgpuDevice = gpuDevice->device_;
++
++        std::weak_ptr<SurfaceState> weakState = _state;
++        gpuDevice->destroy_hooks_.push_back([weakState]() {
++            if (auto state = weakState.lock()) {
++                state->surface = wgpu::Surface();
++                state->destroyed = true;
++            }
++        });
++
++        _adapter = _wgpuDevice.GetAdapter();
++        _instance = _adapter.GetInstance();
 +
 +        _createSurface(env);
-+    };
-+
-+    static Napi::Object NewInstance(Napi::Env env, Napi::Value device, Napi::Value window, Napi::Value presentMode) {
-+        return constructor.New({ device, window, presentMode });
 +    }
 +
 +    Napi::Value getPreferredFormat(const Napi::CallbackInfo& info) {
@@ -336,45 +334,55 @@ index cb70833c76..220e420eb7 100644
 +
 +        wgpu::interop::GPUTextureFormat format;
 +        wgpu::binding::Converter convert(env);
-+        bool success = convert(format, static_cast<wgpu::TextureFormat>(_wgpuPreferredFormat));
++        bool success = convert(format, _wgpuPreferredFormat);
 +        return success ? wgpu::interop::ToJS(env, format) : env.Null();
 +    }
 +
 +    Napi::Value getCurrentTexture(const Napi::CallbackInfo& info) {
 +        const Napi::Env& env = info.Env();
 +
-+        WGPUSurfaceTexture wgpuSurfaceTexture = {};
-+        procs->surfaceGetCurrentTexture(_wgpuSurface, &wgpuSurfaceTexture);
++        wgpu::Texture texture = _acquireSurfaceTexture(env);
++        if (!texture) {
++            return env.Undefined();
++        }
 +
 +        return wgpu::interop::GPUTexture::Create<wgpu::binding::GPUTexture>(env,
-+            wgpu::Device::Acquire(_wgpuDevice),
++            _wgpuDevice,
 +            wgpu::TextureDescriptor(),
-+            wgpu::Texture::Acquire(wgpuSurfaceTexture.texture)
++            std::move(texture)
 +        );
 +    }
 +
 +    Napi::Value getCurrentTextureView(const Napi::CallbackInfo& info) {
 +        const Napi::Env& env = info.Env();
 +
-+        WGPUSurfaceTexture wgpuSurfaceTexture = {};
-+        procs->surfaceGetCurrentTexture(_wgpuSurface, &wgpuSurfaceTexture);
++        wgpu::Texture texture = _acquireSurfaceTexture(env);
++        if (!texture) {
++            return env.Undefined();
++        }
 +
-+        WGPUTextureView wgpuTextureView = procs->textureCreateView(wgpuSurfaceTexture.texture, nullptr);
++        wgpu::TextureView textureView = texture.CreateView();
 +
 +        return wgpu::interop::GPUTextureView::Create<wgpu::binding::GPUTextureView>(env,
 +            wgpu::TextureViewDescriptor(),
-+            wgpu::TextureView::Acquire(wgpuTextureView)
++            std::move(textureView)
 +        );
 +    }
 +
 +    Napi::Value swap(const Napi::CallbackInfo& info) {
 +        const Napi::Env& env = info.Env();
-+        procs->surfacePresent(_wgpuSurface);
++        if (!_hasSurface(env)) {
++            return env.Undefined();
++        }
++        _state->surface.Present();
 +        return env.Undefined();
 +    }
 +
 +    Napi::Value resize(const Napi::CallbackInfo& info) {
 +        const Napi::Env& env = info.Env();
++        if (!_hasSurface(env)) {
++            return env.Undefined();
++        }
 +        _createSurface(env);
 +        return env.Undefined();
 +    }
@@ -383,35 +391,114 @@ index cb70833c76..220e420eb7 100644
 +
 +    Napi::ObjectReference _device;
 +    Napi::ObjectReference _window;
-+    WGPUPresentMode _wgpuPresentMode;
-+    WGPUDevice _wgpuDevice;
-+    WGPUAdapter _wgpuAdapter;
-+    WGPUInstance _wgpuInstance;
-+    WGPUSurface _wgpuSurface;
-+    WGPUTextureFormat _wgpuPreferredFormat;
++    wgpu::PresentMode _wgpuPresentMode;
++    std::string _requestedFormat;
++    uint32_t _requestedUsage = 0;
++    wgpu::Device _wgpuDevice;
++    wgpu::Adapter _adapter;
++    wgpu::Instance _instance;
++    struct SurfaceState {
++        wgpu::Surface surface;
++        bool destroyed = false;
++    };
++
++    std::shared_ptr<SurfaceState> _state = std::make_shared<SurfaceState>();
++    wgpu::TextureFormat _wgpuPreferredFormat;
++
++    static std::string _formatName(const Napi::Env& env, wgpu::TextureFormat wgpuFormat) {
++        wgpu::interop::GPUTextureFormat format;
++        wgpu::binding::Converter convert(env);
++        if (!convert(format, wgpuFormat)) {
++            return "";
++        }
++        return wgpu::interop::ToJS(env, format).As<Napi::String>().Utf8Value();
++    }
++
++    bool _hasSurface(const Napi::Env& env) {
++        if (!_state->destroyed && _state->surface) {
++            return true;
++        }
++        Napi::Error::New(env, "The window surface is no longer available because the device was destroyed").ThrowAsJavaScriptException();
++        return false;
++    }
++
++    wgpu::Texture _acquireSurfaceTexture(const Napi::Env& env) {
++        if (!_hasSurface(env)) {
++            return wgpu::Texture();
++        }
++
++        wgpu::SurfaceTexture surfaceTexture;
++        _state->surface.GetCurrentTexture(&surfaceTexture);
++
++        if (!surfaceTexture.texture) {
++            Napi::Error::New(env, "Failed to get the current texture of the window surface (status " + std::to_string(static_cast<int>(surfaceTexture.status)) + ")").ThrowAsJavaScriptException();
++            return wgpu::Texture();
++        }
++
++        return std::move(surfaceTexture.texture);
++    }
 +
 +    void _createSurface(const Napi::Env &env) {
-+        Napi::Buffer<char> buffer = { env, _window.Get("_native").As<Napi::Object>().Get("gpu") };
-+        _wgpuSurface = wgpu::sdl::CreateSurfaceForWindow(procs, _wgpuInstance, buffer.Data());
++        _state->surface = wgpu::Surface();
 +
-+        WGPUSurfaceCapabilities wgpuCapabilities = {};
-+        procs->surfaceGetCapabilities(_wgpuSurface, _wgpuAdapter, &wgpuCapabilities);
++        Napi::Buffer<char> buffer = _window.Get("_native").As<Napi::Object>().Get("gpu").As<Napi::Buffer<char>>();
++        _state->surface = wgpu::sdl::CreateSurfaceForWindow(_instance, buffer.Data());
 +
-+        _wgpuPreferredFormat = wgpuCapabilities.formats[0];
++        wgpu::SurfaceCapabilities capabilities;
++        _state->surface.GetCapabilities(_adapter, &capabilities);
 +
-+        WGPUSurfaceConfiguration wgpuConfig = {};
-+        wgpuConfig.device = _wgpuDevice;
-+        wgpuConfig.format = _wgpuPreferredFormat;
-+        wgpuConfig.usage = WGPUTextureUsage_RenderAttachment;
-+        wgpuConfig.alphaMode = WGPUCompositeAlphaMode_Opaque;
-+        wgpuConfig.width = _window.Get("_pixelWidth").ToNumber().Uint32Value();
-+        wgpuConfig.height = _window.Get("_pixelHeight").ToNumber().Uint32Value();
-+        wgpuConfig.presentMode = _wgpuPresentMode;
-+        procs->surfaceConfigure(_wgpuSurface, &wgpuConfig);
++        _configureSurface(env, capabilities);
++    }
++
++    void _configureSurface(const Napi::Env &env, const wgpu::SurfaceCapabilities& capabilities) {
++        if (capabilities.formatCount == 0) {
++            Napi::Error::New(env, "The window surface does not support any texture formats").ThrowAsJavaScriptException();
++            return;
++        }
++
++        wgpu::TextureFormat format = capabilities.formats[0];
++
++        if (!_requestedFormat.empty()) {
++            std::string available;
++            bool found = false;
++            for (size_t i = 0; i < capabilities.formatCount; i++) {
++                std::string name = _formatName(env, capabilities.formats[i]);
++                available += (i == 0 ? "" : ", ") + name;
++                if (name == _requestedFormat) {
++                    format = capabilities.formats[i];
++                    found = true;
++                }
++            }
++            if (!found) {
++                Napi::Error::New(env, "Format \"" + _requestedFormat + "\" is not supported by the window surface. Supported formats: " + available).ThrowAsJavaScriptException();
++                return;
++            }
++        }
++
++        wgpu::TextureUsage usage = wgpu::TextureUsage::RenderAttachment;
++        if (_requestedUsage != 0) {
++            usage = static_cast<wgpu::TextureUsage>(_requestedUsage);
++            if (usage & ~capabilities.usages) {
++                Napi::Error::New(env, "The requested usage is not supported by the window surface").ThrowAsJavaScriptException();
++                return;
++            }
++        }
++
++        _wgpuPreferredFormat = format;
++
++        wgpu::SurfaceConfiguration config;
++        config.device = _wgpuDevice;
++        config.format = format;
++        config.usage = usage;
++        config.alphaMode = wgpu::CompositeAlphaMode::Opaque;
++        config.width = _window.Get("_pixelWidth").ToNumber().Uint32Value();
++        config.height = _window.Get("_pixelHeight").ToNumber().Uint32Value();
++        config.presentMode = _wgpuPresentMode;
++        _state->surface.Configure(&config);
 +    }
 +};
 +
-+Napi::Value RenderGPUDeviceToWindow(const Napi::CallbackInfo& info) {
++Napi::Value RenderGPUDeviceToWindow(const Napi::FunctionReference& rendererCtor, const Napi::CallbackInfo& info) {
 +    const Napi::Env& env = info.Env();
 +
 +    if (info.Length() != 1) {
@@ -452,28 +539,35 @@ index cb70833c76..220e420eb7 100644
 +        }
 +    }
 +
-+    return Renderer::NewInstance(env, jsDevice, jsWindow, jsPresentMode);
- }
- 
++    Napi::Value jsFormat = jsObj.Get("format");
++    if (!jsFormat.IsUndefined() && !jsFormat.IsString()) {
++        Napi::Error::New(env, "format argument to renderGPUDeviceToWindow must be a string").ThrowAsJavaScriptException();
++        return env.Undefined();
++    }
++
++    Napi::Value jsUsage = jsObj.Get("usage");
++    if (!jsUsage.IsUndefined() && !jsUsage.IsNumber()) {
++        Napi::Error::New(env, "usage argument to renderGPUDeviceToWindow must be a number").ThrowAsJavaScriptException();
++        return env.Undefined();
++    }
++
++    return rendererCtor.New({ jsDevice, jsWindow, jsPresentMode, jsFormat, jsUsage });
++}
++
  #ifdef DAWN_EMIT_COVERAGE
-@@ -104,13 +289,18 @@ struct Coverage {
- // object.
- NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports) {
-     // Set all the Dawn procedure function pointers.
--    dawnProcSetProcs(&dawn::native::GetProcs());
-+    procs = &dawn::native::GetProcs();
-+    dawnProcSetProcs(procs);
- 
-     // Register all the interop types
+ struct Coverage {
+     Coverage() : output_path_{GetOutputPath()} {
+@@ -110,7 +403,12 @@ NAPI_MODULE_EXPORT Napi::Object Initialize(Napi::Env env, Napi::Object exports)
      exports.Set(Napi::String::New(env, "globals"), wgpu::interop::Initialize(env));
  
      // Export function that creates and returns the wgpu::interop::GPU interface
 -    exports.Set(Napi::String::New(env, "create"), Napi::Function::New<CreateGPU>(env));
 +    exports.Set(Napi::String::New(env, "_create"), Napi::Function::New<CreateGPU>(env));
 +
-+    Renderer::Init(env);
-+
-+    exports.Set(Napi::String::New(env, "renderGPUDeviceToWindow"), Napi::Function::New<RenderGPUDeviceToWindow>(env));
++    auto rendererCtor = std::make_shared<Napi::FunctionReference>(Napi::Persistent(Renderer::Class(env)));
++    exports.Set(Napi::String::New(env, "renderGPUDeviceToWindow"), Napi::Function::New(env, [rendererCtor](const Napi::CallbackInfo& info) {
++        return RenderGPUDeviceToWindow(*rendererCtor, info);
++    }));
  
  #ifdef DAWN_EMIT_COVERAGE
      Coverage* coverage = new Coverage();
@@ -581,22 +675,6 @@ index 2fe3563f35..ec1dc600bc 100644
  };
  
  // Whether an asynchronous task needs wgpuInstanceProcessEvents() to be called in order to make
-diff --git a/src/dawn/node/binding/GPU.h b/src/dawn/node/binding/GPU.h
-index 9345441e91..1dbbf4bbd4 100644
---- a/src/dawn/node/binding/GPU.h
-+++ b/src/dawn/node/binding/GPU.h
-@@ -51,9 +51,10 @@ class GPU final : public interop::GPU {
-     interop::GPUTextureFormat getPreferredCanvasFormat(Napi::Env) override;
-     interop::Interface<interop::WGSLLanguageFeatures> getWgslLanguageFeatures(Napi::Env) override;
- 
-+    std::unique_ptr<dawn::native::Instance> instance_;
-+
-   private:
-     const Flags flags_;
--    std::unique_ptr<dawn::native::Instance> instance_;
-     std::shared_ptr<AsyncRunner> async_;
- };
- 
 diff --git a/src/dawn/node/binding/GPUDevice.cpp b/src/dawn/node/binding/GPUDevice.cpp
 index 6242f853c7..b9bc8d7ea8 100644
 --- a/src/dawn/node/binding/GPUDevice.cpp
@@ -718,10 +796,10 @@ index 0000000000..e21b8881bc
 +}
 diff --git a/src/dawn/sdl/CMakeLists.txt b/src/dawn/sdl/CMakeLists.txt
 new file mode 100644
-index 0000000000..f8f8a79cff
+index 0000000000..1c93504b3e
 --- /dev/null
 +++ b/src/dawn/sdl/CMakeLists.txt
-@@ -0,0 +1,49 @@
+@@ -0,0 +1,50 @@
 +# Copyright 2022 The Dawn & Tint Authors
 +#
 +# Redistribution and use in source and binary forms, with or without
@@ -763,20 +841,21 @@ index 0000000000..f8f8a79cff
 +    dawn_common
 +  PRIVATE
 +    dawn_internal_config
++    dawn_proc
 +)
 +
-+target_compile_definitions(dawn_sdl PRIVATE "WGPU_IMPLEMENTATION")
++target_compile_definitions(dawn_sdl PRIVATE "WGPU_SDL_IMPLEMENTATION")
 +if(BUILD_SHARED_LIBS)
-+    target_compile_definitions(dawn_sdl PRIVATE "WGPU_SHARED_LIBRARY")
++    target_compile_definitions(dawn_sdl PUBLIC "WGPU_SDL_SHARED_LIBRARY")
 +endif()
 +
 +add_library(webgpu_sdl ALIAS dawn_sdl)
 diff --git a/src/dawn/sdl/utils.cpp b/src/dawn/sdl/utils.cpp
 new file mode 100644
-index 0000000000..71262b2551
+index 0000000000..e2eebb3546
 --- /dev/null
 +++ b/src/dawn/sdl/utils.cpp
-@@ -0,0 +1,132 @@
+@@ -0,0 +1,131 @@
 +// Copyright 2020 The Dawn & Tint Authors
 +//
 +// Redistribution and use in source and binary forms, with or without
@@ -898,14 +977,13 @@ index 0000000000..71262b2551
 +#endif
 +}
 +
-+WGPUSurface CreateSurfaceForWindow(const DawnProcTable *procs, const WGPUInstance& instance, void* window) {
-+    std::unique_ptr<WGPUChainedStruct, void (*)(WGPUChainedStruct*)> chainedDescriptor = GetSurfaceDescriptor((NativeData*) window);
++wgpu::Surface CreateSurfaceForWindow(const wgpu::Instance& instance, void* nativeData) {
++    std::unique_ptr<WGPUChainedStruct, void (*)(WGPUChainedStruct*)> chainedDescriptor = GetSurfaceDescriptor(static_cast<NativeData*>(nativeData));
 +
 +    WGPUSurfaceDescriptor surfaceDesc = {};
 +    surfaceDesc.nextInChain = chainedDescriptor.get();
-+    WGPUSurface surface = procs->instanceCreateSurface(instance, &surfaceDesc);
 +
-+    return surface;
++    return wgpu::Surface::Acquire(wgpuInstanceCreateSurface(instance.Get(), &surfaceDesc));
 +}
 +
 +}  // namespace wgpu::sdl
