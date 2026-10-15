@@ -146,63 +146,18 @@ index a8d5121174..294484d604 100644
      'name': 'configure_siso',
 diff --git a/include/webgpu/webgpu_sdl.h b/include/webgpu/webgpu_sdl.h
 new file mode 100644
-index 0000000000..112eb6bdd6
+index 0000000000..445e57d9b5
 --- /dev/null
 +++ b/include/webgpu/webgpu_sdl.h
-@@ -0,0 +1,57 @@
-+// Copyright 2022 The Dawn & Tint Authors
-+//
-+// Redistribution and use in source and binary forms, with or without
-+// modification, are permitted provided that the following conditions are met:
-+//
-+// 1. Redistributions of source code must retain the above copyright notice, this
-+//    list of conditions and the following disclaimer.
-+//
-+// 2. Redistributions in binary form must reproduce the above copyright notice,
-+//    this list of conditions and the following disclaimer in the documentation
-+//    and/or other materials provided with the distribution.
-+//
-+// 3. Neither the name of the copyright holder nor the names of its
-+//    contributors may be used to endorse or promote products derived from
-+//    this software without specific prior written permission.
-+//
-+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+
+@@ -0,0 +1,12 @@
 +#ifndef INCLUDE_WEBGPU_WEBGPU_SDL_H_
 +#define INCLUDE_WEBGPU_WEBGPU_SDL_H_
 +
 +#include "webgpu/webgpu_cpp.h"
 +
-+#if defined(WGPU_SDL_SHARED_LIBRARY)
-+#if defined(_WIN32)
-+#if defined(WGPU_SDL_IMPLEMENTATION)
-+#define WGPU_SDL_EXPORT __declspec(dllexport)
-+#else
-+#define WGPU_SDL_EXPORT __declspec(dllimport)
-+#endif
-+#else  // defined(_WIN32)
-+#if defined(WGPU_SDL_IMPLEMENTATION)
-+#define WGPU_SDL_EXPORT __attribute__((visibility("default")))
-+#else
-+#define WGPU_SDL_EXPORT
-+#endif
-+#endif  // defined(_WIN32)
-+#else   // defined(WGPU_SDL_SHARED_LIBRARY)
-+#define WGPU_SDL_EXPORT
-+#endif  // defined(WGPU_SDL_SHARED_LIBRARY)
-+
 +namespace wgpu::sdl {
 +
-+WGPU_SDL_EXPORT wgpu::Surface CreateSurfaceForWindow(const wgpu::Instance& instance, void* nativeData);
++wgpu::Surface CreateSurfaceForWindow(const wgpu::Instance& instance, void* nativeData);
 +
 +}  // namespace wgpu::sdl
 +
@@ -738,68 +693,12 @@ index 5e048d595c..bc170604fd 100644
      std::shared_ptr<AsyncRunner> async_;
  
      // This promise's JS object lives as long as the device because it is stored in .lost
-diff --git a/src/dawn/sdl/BUILD.gn b/src/dawn/sdl/BUILD.gn
-new file mode 100644
-index 0000000000..e21b8881bc
---- /dev/null
-+++ b/src/dawn/sdl/BUILD.gn
-@@ -0,0 +1,50 @@
-+# Copyright 2022 The Dawn & Tint Authors
-+#
-+# Redistribution and use in source and binary forms, with or without
-+# modification, are permitted provided that the following conditions are met:
-+#
-+# 1. Redistributions of source code must retain the above copyright notice, this
-+#    list of conditions and the following disclaimer.
-+#
-+# 2. Redistributions in binary form must reproduce the above copyright notice,
-+#    this list of conditions and the following disclaimer in the documentation
-+#    and/or other materials provided with the distribution.
-+#
-+# 3. Neither the name of the copyright holder nor the names of its
-+#    contributors may be used to endorse or promote products derived from
-+#    this software without specific prior written permission.
-+#
-+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+
-+import("../../../scripts/dawn_overrides_with_defaults.gni")
-+
-+import("${dawn_root}/scripts/dawn_component.gni")
-+import("${dawn_root}/scripts/dawn_features.gni")
-+
-+###############################################################################
-+# SDL utils
-+###############################################################################
-+
-+static_library("sdl") {
-+  defines = [ "WGPU_SDL_IMPLEMENTATION" ]
-+
-+  sources = [ "utils.cpp" ]
-+  deps = [
-+    "${dawn_root}/src/dawn:cpp",
-+    "${dawn_root}/src/dawn:proc",
-+    "${dawn_root}/src/dawn/common",
-+  ]
-+
-+  public_deps = [
-+    "${dawn_root}/include/dawn:cpp_headers",
-+  ]
-+}
 diff --git a/src/dawn/sdl/CMakeLists.txt b/src/dawn/sdl/CMakeLists.txt
 new file mode 100644
-index 0000000000..1c93504b3e
+index 0000000000..e9c60e9a01
 --- /dev/null
 +++ b/src/dawn/sdl/CMakeLists.txt
-@@ -0,0 +1,50 @@
+@@ -0,0 +1,45 @@
 +# Copyright 2022 The Dawn & Tint Authors
 +#
 +# Redistribution and use in source and binary forms, with or without
@@ -844,70 +743,30 @@ index 0000000000..1c93504b3e
 +    dawn_proc
 +)
 +
-+target_compile_definitions(dawn_sdl PRIVATE "WGPU_SDL_IMPLEMENTATION")
-+if(BUILD_SHARED_LIBS)
-+    target_compile_definitions(dawn_sdl PUBLIC "WGPU_SDL_SHARED_LIBRARY")
-+endif()
-+
 +add_library(webgpu_sdl ALIAS dawn_sdl)
 diff --git a/src/dawn/sdl/utils.cpp b/src/dawn/sdl/utils.cpp
 new file mode 100644
-index 0000000000..e2eebb3546
+index 0000000000..e6a55a633e
 --- /dev/null
 +++ b/src/dawn/sdl/utils.cpp
-@@ -0,0 +1,131 @@
-+// Copyright 2020 The Dawn & Tint Authors
-+//
-+// Redistribution and use in source and binary forms, with or without
-+// modification, are permitted provided that the following conditions are met:
-+//
-+// 1. Redistributions of source code must retain the above copyright notice, this
-+//    list of conditions and the following disclaimer.
-+//
-+// 2. Redistributions in binary form must reproduce the above copyright notice,
-+//    this list of conditions and the following disclaimer in the documentation
-+//    and/or other materials provided with the distribution.
-+//
-+// 3. Neither the name of the copyright holder nor the names of its
-+//    contributors may be used to endorse or promote products derived from
-+//    this software without specific prior written permission.
-+//
-+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-+// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-+// FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-+// DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-+// SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-+// CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-+// OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+
+@@ -0,0 +1,64 @@
 +#include <cstdint>
-+#include <cstdlib>
-+#include <memory>
-+#include <utility>
 +
 +#include "src/utils/platform.h"
 +#include "webgpu/webgpu_sdl.h"
-+
-+#if DAWN_PLATFORM_IS(WINDOWS)
-+#include <windows.h>
-+#endif
 +
 +namespace wgpu::sdl {
 +
 +#if DAWN_PLATFORM_IS(WINDOWS)
 +    struct NativeData {
-+        HWND hwnd;
-+        HINSTANCE hinstance;
++        void* hwnd;
++        void* hinstance;
 +    };
 +#elif defined(DAWN_ENABLE_BACKEND_METAL)
-+    class CALayer;
 +    struct NativeData {
-+        CALayer *layer;
++        void* layer;
 +    };
-+#elif defined(DAWN_USE_X11) || defined(DAWN_USE_WAYLAND)
++#else
 +    // Tagged payload shared with @kmamal/sdl (see sdl's window.native docs)
 +    struct NativeData {
 +        uint64_t subsystem;  // 1 = x11, 2 = wayland
@@ -916,74 +775,42 @@ index 0000000000..e2eebb3546
 +    };
 +#endif
 +
-+std::unique_ptr<WGPUChainedStruct, void (*)(WGPUChainedStruct*)> GetSurfaceDescriptor(NativeData* native) {
++wgpu::Surface CreateSurfaceForWindow(const wgpu::Instance& instance, void* nativeData) {
++    NativeData* native = static_cast<NativeData*>(nativeData);
++    wgpu::SurfaceDescriptor descriptor;
++
 +#if DAWN_PLATFORM_IS(WINDOWS)
-+    WGPUSurfaceSourceWindowsHWND* desc = new WGPUSurfaceSourceWindowsHWND();
-+    desc->chain.next = nullptr;
-+    desc->chain.sType = WGPUSType_SurfaceSourceWindowsHWND;
-+    desc->hwnd = native->hwnd;
-+    desc->hinstance = native->hinstance;
-+    return {
-+        reinterpret_cast<WGPUChainedStruct*>(desc),
-+        [](WGPUChainedStruct* desc) {
-+            delete reinterpret_cast<WGPUSurfaceSourceWindowsHWND*>(desc);
-+        }
-+    };
++    wgpu::SurfaceSourceWindowsHWND source;
++    source.hwnd = native->hwnd;
++    source.hinstance = native->hinstance;
++    descriptor.nextInChain = &source;
++    return instance.CreateSurface(&descriptor);
 +#elif defined(DAWN_ENABLE_BACKEND_METAL)
-+    WGPUSurfaceSourceMetalLayer* desc = new WGPUSurfaceSourceMetalLayer();
-+    desc->chain.next = nullptr;
-+    desc->chain.sType = WGPUSType_SurfaceSourceMetalLayer;
-+    desc->layer = native->layer;
-+    return {
-+        reinterpret_cast<WGPUChainedStruct*>(desc),
-+        [](WGPUChainedStruct* desc) {
-+            delete reinterpret_cast<WGPUSurfaceSourceMetalLayer*>(desc);
-+        }
-+    };
-+#elif defined(DAWN_USE_X11) || defined(DAWN_USE_WAYLAND)
++    wgpu::SurfaceSourceMetalLayer source;
++    source.layer = native->layer;
++    descriptor.nextInChain = &source;
++    return instance.CreateSurface(&descriptor);
++#else
 +#if defined(DAWN_USE_X11)
 +    if (native->subsystem == 1) {
-+        WGPUSurfaceSourceXlibWindow* desc = new WGPUSurfaceSourceXlibWindow();
-+        desc->chain.next = nullptr;
-+        desc->chain.sType = WGPUSType_SurfaceSourceXlibWindow;
-+        desc->display = native->display;
-+        desc->window = native->window;
-+        return {
-+            reinterpret_cast<WGPUChainedStruct*>(desc),
-+            [](WGPUChainedStruct* desc) {
-+                delete reinterpret_cast<WGPUSurfaceSourceXlibWindow*>(desc);
-+            }
-+        };
++        wgpu::SurfaceSourceXlibWindow source;
++        source.display = native->display;
++        source.window = native->window;
++        descriptor.nextInChain = &source;
++        return instance.CreateSurface(&descriptor);
 +    }
 +#endif
 +#if defined(DAWN_USE_WAYLAND)
 +    if (native->subsystem == 2) {
-+        WGPUSurfaceSourceWaylandSurface* desc = new WGPUSurfaceSourceWaylandSurface();
-+        desc->chain.next = nullptr;
-+        desc->chain.sType = WGPUSType_SurfaceSourceWaylandSurface;
-+        desc->display = native->display;
-+        desc->surface = reinterpret_cast<void*>(native->window);
-+        return {
-+            reinterpret_cast<WGPUChainedStruct*>(desc),
-+            [](WGPUChainedStruct* desc) {
-+                delete reinterpret_cast<WGPUSurfaceSourceWaylandSurface*>(desc);
-+            }
-+        };
++        wgpu::SurfaceSourceWaylandSurface source;
++        source.display = native->display;
++        source.surface = reinterpret_cast<void*>(native->window);
++        descriptor.nextInChain = &source;
++        return instance.CreateSurface(&descriptor);
 +    }
 +#endif
-+    return { nullptr, [](WGPUChainedStruct*) {} };
-+#else
-+    return { nullptr, [](WGPUChainedStruct*) {} };
++    return instance.CreateSurface(&descriptor);
 +#endif
-+}
-+
-+wgpu::Surface CreateSurfaceForWindow(const wgpu::Instance& instance, void* nativeData) {
-+    std::unique_ptr<WGPUChainedStruct, void (*)(WGPUChainedStruct*)> chainedDescriptor = GetSurfaceDescriptor(static_cast<NativeData*>(nativeData));
-+
-+    WGPUSurfaceDescriptor surfaceDesc = {};
-+    surfaceDesc.nextInChain = chainedDescriptor.get();
-+
-+    return wgpu::Surface::Acquire(wgpuInstanceCreateSurface(instance.Get(), &surfaceDesc));
 +}
 +
 +}  // namespace wgpu::sdl
