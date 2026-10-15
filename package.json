@@ -32,11 +32,11 @@
   "config": {
     "depotTools": {
       "url": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
-      "commit": "9f4b1bd59d29f5b9f4acd37733bd10fab3641204"
+      "commit": "36a8df4ad006eaa0572fb446edb8145fe5403592"
     },
     "dawn": {
       "url": "https://dawn.googlesource.com/dawn",
-      "commit": "1e975e28f98a0285e44150a7f64b3bb89f27c719"
+      "commit": "42d0e90fe3552a2a8e95ca8e506bc19bbda12729"
     }
   },
   "devDependencies": {

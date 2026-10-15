@@ -26,4 +26,14 @@ if (C.platform === 'win32') {
 	})
 
 	await Fs.promises.rm(`${C.dir.depotTools}/ninja`)
+} else {
+	execSync('./ensure_bootstrap', {
+		stdio: 'inherit',
+		cwd: C.dir.depotTools,
+		env: {
+			...process.env,
+			...C.depotTools.env,
+			DEPOT_TOOLS_UPDATE: '0',
+		},
+	})
 }
