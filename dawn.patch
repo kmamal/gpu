@@ -597,15 +597,62 @@ index 9345441e91..1dbbf4bbd4 100644
      std::shared_ptr<AsyncRunner> async_;
  };
  
+diff --git a/src/dawn/node/binding/GPUDevice.cpp b/src/dawn/node/binding/GPUDevice.cpp
+index 6242f853c7..b9bc8d7ea8 100644
+--- a/src/dawn/node/binding/GPUDevice.cpp
++++ b/src/dawn/node/binding/GPUDevice.cpp
+@@ -221,6 +221,7 @@ GPUDevice::~GPUDevice() {
+     // process, which is not a good idea.
+     if (!destroyed_) {
+         lost_promise_.Discard();
++        RunDestroyHooks();
+         device_.Destroy();
+         destroyed_ = true;
+     }
+@@ -304,10 +305,19 @@ void GPUDevice::destroy(Napi::Env env) {
+         lost_promise_.Resolve(interop::GPUDeviceLostInfo::Create<GPUDeviceLostInfo>(
+             env_, interop::GPUDeviceLostReason::kDestroyed, "device was destroyed"));
+     }
++    RunDestroyHooks();
+     device_.Destroy();
+     destroyed_ = true;
+ }
+ 
++void GPUDevice::RunDestroyHooks() {
++    std::vector<std::function<void()>> hooks = std::move(destroy_hooks_);
++    destroy_hooks_.clear();
++    for (auto& hook : hooks) {
++        hook();
++    }
++}
++
+ interop::Interface<interop::GPUBuffer> GPUDevice::createBuffer(
+     Napi::Env env,
+     interop::GPUBufferDescriptor descriptor) {
 diff --git a/src/dawn/node/binding/GPUDevice.h b/src/dawn/node/binding/GPUDevice.h
-index 5e048d595c..d401ca5b24 100644
+index 5e048d595c..bc170604fd 100644
 --- a/src/dawn/node/binding/GPUDevice.h
 +++ b/src/dawn/node/binding/GPUDevice.h
-@@ -133,9 +133,10 @@ class GPUDevice final : public interop::GPUDevice, EventTarget {
+@@ -30,8 +30,10 @@
+ 
+ #include <webgpu/webgpu_cpp.h>
+ 
++#include <functional>
+ #include <memory>
+ #include <string>
++#include <vector>
+ 
+ #include "src/dawn/node/binding/AsyncRunner.h"
+ #include "src/dawn/node/binding/EventTarget.h"
+@@ -133,9 +135,14 @@ class GPUDevice final : public interop::GPUDevice, EventTarget {
                                                ErrorType type,
                                                wgpu::StringView message);
  
 +    wgpu::Device device_;
++
++    std::vector<std::function<void()>> destroy_hooks_;
++
++    void RunDestroyHooks();
 +
    private:
      Napi::Env env_;
