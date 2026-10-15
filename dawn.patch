@@ -478,34 +478,109 @@ index cb70833c76..220e420eb7 100644
  #ifdef DAWN_EMIT_COVERAGE
      Coverage* coverage = new Coverage();
 diff --git a/src/dawn/node/binding/AsyncRunner.cpp b/src/dawn/node/binding/AsyncRunner.cpp
-index 9c16028b53..8bd3575fa5 100644
+index 9c16028b53..7962603ca1 100644
 --- a/src/dawn/node/binding/AsyncRunner.cpp
 +++ b/src/dawn/node/binding/AsyncRunner.cpp
-@@ -66,7 +66,7 @@ void AsyncRunner::ScheduleProcessEvents(Napi::Env env) {
+@@ -28,10 +28,14 @@
+ #include "src/dawn/node/binding/AsyncRunner.h"
+ 
+ #include <cassert>
++#include <chrono>
+ #include <limits>
+ 
+ namespace wgpu::binding {
+ 
++constexpr int64_t kMaxProcessEventsDelayMs = 16;
++constexpr int64_t kProcessEventsBackoffDivisor = 8;
++
+ // static
+ std::shared_ptr<AsyncRunner> AsyncRunner::Create(dawn::native::Instance* instance) {
+     auto runner = std::make_shared<AsyncRunner>(instance);
+@@ -43,6 +47,8 @@ AsyncRunner::AsyncRunner(dawn::native::Instance* instance) : instance_(instance)
+ 
+ void AsyncRunner::Begin(Napi::Env env) {
+     assert(tasks_waiting_ != std::numeric_limits<decltype(tasks_waiting_)>::max());
++    last_activity_ = std::chrono::steady_clock::now();
++    process_events_delay_ms_ = 0;
+     if (tasks_waiting_++ == 0) {
+         ScheduleProcessEvents(env);
+     }
+@@ -65,23 +71,38 @@ void AsyncRunner::ScheduleProcessEvents(Napi::Env env) {
+     process_events_queued_ = true;
  
      auto weak_self = weak_this_;
-     env.Global()
+-    env.Global()
 -        .Get("setImmediate")
-+        .Get("setTimeout")
-         .As<Napi::Function>()
-         .Call({
-             // TODO(crbug.com/dawn/1127): Create once, reuse.
-@@ -78,9 +78,15 @@ void AsyncRunner::ScheduleProcessEvents(Napi::Env env) {
-                                     }
+-        .As<Napi::Function>()
+-        .Call({
+-            // TODO(crbug.com/dawn/1127): Create once, reuse.
+-            Napi::Function::New(env,
+-                                [weak_self, env](const Napi::CallbackInfo&) {
+-                                    auto self = weak_self.lock();
+-                                    if (self == nullptr) {
+-                                        return;
+-                                    }
++    // TODO(crbug.com/dawn/1127): Create once, reuse.
++    auto callback = Napi::Function::New(env, [weak_self, env](const Napi::CallbackInfo&) {
++        auto self = weak_self.lock();
++        if (self == nullptr) {
++            return;
++        }
  
-                                     self->process_events_queued_ = false;
+-                                    self->process_events_queued_ = false;
+-                                    wgpuInstanceProcessEvents(self->instance_->Get());
+-                                    self->ScheduleProcessEvents(env);
+-                                }),
+-        });
++        self->process_events_queued_ = false;
 +
-+                                    if (self->tasks_waiting_ == 0) {
-+                                        return ;
-+                                    }
++        auto tasks_before = self->tasks_waiting_;
++        wgpuInstanceProcessEvents(self->instance_->Get());
++        auto now = std::chrono::steady_clock::now();
++        if (self->tasks_waiting_ < tasks_before) {
++            self->last_activity_ = now;
++        }
++        auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - self->last_activity_).count();
++        auto delay_ms = elapsed_ms / kProcessEventsBackoffDivisor;
++        if (delay_ms < 1) {
++            delay_ms = 1;
++        } else if (delay_ms > kMaxProcessEventsDelayMs) {
++            delay_ms = kMaxProcessEventsDelayMs;
++        }
++        self->process_events_delay_ms_ = static_cast<uint32_t>(delay_ms);
++        self->ScheduleProcessEvents(env);
++    });
 +
-                                     wgpuInstanceProcessEvents(self->instance_->Get());
-                                     self->ScheduleProcessEvents(env);
-                                 }),
-+            Napi::Number::New(env, 100)
-         });
++    auto global = env.Global();
++    if (process_events_delay_ms_ == 0) {
++        global.Get("setImmediate").As<Napi::Function>().Call({callback});
++    } else {
++        global.Get("setTimeout").As<Napi::Function>().Call({callback, Napi::Number::New(env, process_events_delay_ms_)});
++    }
  }
  
+ void AsyncRunner::Reject(Napi::Env env, interop::Promise<void> promise, Napi::Error error) {
+diff --git a/src/dawn/node/binding/AsyncRunner.h b/src/dawn/node/binding/AsyncRunner.h
+index 2fe3563f35..ec1dc600bc 100644
+--- a/src/dawn/node/binding/AsyncRunner.h
++++ b/src/dawn/node/binding/AsyncRunner.h
+@@ -31,6 +31,7 @@
+ #include <stdint.h>
+ #include <webgpu/webgpu_cpp.h>
+ 
++#include <chrono>
+ #include <memory>
+ #include <utility>
+ 
+@@ -74,6 +75,8 @@ class AsyncRunner {
+     const dawn::native::Instance* const instance_;
+     uint64_t tasks_waiting_ = 0;
+     bool process_events_queued_ = false;
++    uint32_t process_events_delay_ms_ = 0;
++    std::chrono::steady_clock::time_point last_activity_;
+ };
+ 
+ // Whether an asynchronous task needs wgpuInstanceProcessEvents() to be called in order to make
 diff --git a/src/dawn/node/binding/GPU.h b/src/dawn/node/binding/GPU.h
 index 9345441e91..1dbbf4bbd4 100644
 --- a/src/dawn/node/binding/GPU.h
