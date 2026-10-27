@@ -59,13 +59,14 @@ const image = PNG.sync.read(pngData)
 const texture = device.createTexture({
 	size: { width: image.width, height: image.height },
 	format: 'rgba8unorm',
-	usage: gpu.GPUTextureUsage.TEXTURE_BINDING | gpu.GPUTextureUsage.COPY_DST,
+	usage: gpu.GPUTextureUsage.TEXTURE_BINDING
+		| gpu.GPUTextureUsage.COPY_DST
+		| gpu.GPUTextureUsage.RENDER_ATTACHMENT,
 })
 
-device.queue.writeTexture(
+device.queue.copyExternalImageToTexture(
+	{ source: image },
 	{ texture },
-	image.data,
-	{ bytesPerRow: 4 * image.width },
 	{ width: image.width, height: image.height },
 )
 

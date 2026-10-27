@@ -24,13 +24,15 @@ type GPUFlagsConstant =
   number;
 type GPUImageCopyExternalImageSource =
 
-    | ImageBitmap
-    | ImageData
-    | HTMLImageElement
-    | HTMLVideoElement
-    | VideoFrame
-    | HTMLCanvasElement
-    | OffscreenCanvas;
+    | GPUImageCopyExternalImagePixels
+    | GPUImageCopyExternalImageCanvas;
+type PredefinedColorSpace =
+  | "srgb"
+  | "display-p3";
+type AllowSharedBufferSource =
+  | ArrayBuffer
+  | SharedArrayBuffer
+  | ArrayBufferView;
 type GPUIndex32 =
   number;
 type GPUIntegerCoordinate =
@@ -755,9 +757,7 @@ interface GPUExternalTextureBindingLayout {}
 
 interface GPUExternalTextureDescriptor
   extends GPUObjectDescriptorBase {
-  source:
-    | HTMLVideoElement
-    | VideoFrame;
+  source: never;
   colorSpace?: PredefinedColorSpace;
 }
 
@@ -779,6 +779,27 @@ interface GPUImageCopyBuffer
   buffer: GPUBuffer;
 }
 
+interface GPUImageCopyExternalImagePixels {
+  width: number;
+  height: number;
+  data: Uint8Array | Uint8ClampedArray;
+}
+
+interface GPUImageCopyExternalImageCanvas {
+  width: number;
+  height: number;
+  getContext(
+    contextId: "2d"
+  ): {
+    getImageData(
+      sx: number,
+      sy: number,
+      sw: number,
+      sh: number
+    ): GPUImageCopyExternalImagePixels;
+  } | null;
+}
+
 interface GPUImageCopyExternalImage {
   /**
    * The source of the image copy. The copy source data is captured at the moment that
@@ -794,25 +815,13 @@ interface GPUImageCopyExternalImage {
    * </thead>
    * <tbody>
    * <tr>
-   * <td>{@link ImageBitmap}
-   * <td>{@link ImageBitmap#width|ImageBitmap.width}
-   * <td>{@link ImageBitmap#height|ImageBitmap.height}
+   * <td>{@link GPUImageCopyExternalImagePixels}
+   * <td>{@link GPUImageCopyExternalImagePixels#width|GPUImageCopyExternalImagePixels.width}
+   * <td>{@link GPUImageCopyExternalImagePixels#height|GPUImageCopyExternalImagePixels.height}
    * <tr>
-   * <td>{@link HTMLVideoElement}
-   * <td>video/intrinsic width|intrinsic width of the frame
-   * <td>video/intrinsic height|intrinsic height of the frame
-   * <tr>
-   * <td>{@link VideoFrame}
-   * <td>{@link VideoFrame#codedWidth|VideoFrame.codedWidth}
-   * <td>{@link VideoFrame#codedHeight|VideoFrame.codedHeight}
-   * <tr>
-   * <td>{@link HTMLCanvasElement}
-   * <td>{@link HTMLCanvasElement#width|HTMLCanvasElement.width}
-   * <td>{@link HTMLCanvasElement#height|HTMLCanvasElement.height}
-   * <tr>
-   * <td>{@link OffscreenCanvas}
-   * <td>{@link OffscreenCanvas#width|OffscreenCanvas.width}
-   * <td>{@link OffscreenCanvas#height|OffscreenCanvas.height}
+   * <td>{@link GPUImageCopyExternalImageCanvas}
+   * <td>{@link GPUImageCopyExternalImageCanvas#width|GPUImageCopyExternalImageCanvas.width}
+   * <td>{@link GPUImageCopyExternalImageCanvas#height|GPUImageCopyExternalImageCanvas.height}
    * </tbody>
    * </table>
    */
@@ -863,7 +872,7 @@ interface GPUImageCopyTextureTagged
    * If {@link GPUImageCopyTextureTagged#colorSpace} matches the source image,
    * conversion may not be necessary. See [[#color-space-conversion-elision]].
    */
-  colorSpace?: PredefinedColorSpace;
+  colorSpace?: "srgb";
   /**
    * Describes whether the data written into the texture should have its RGB channels
    * premultiplied by the alpha channel, or not.
@@ -1544,6 +1553,12 @@ interface GPUTextureViewDescriptor
   arrayLayerCount?: GPUIntegerCoordinate;
 }
 
+interface EventInit {
+  bubbles?: boolean;
+  cancelable?: boolean;
+  composed?: boolean;
+}
+
 interface GPUUncapturedErrorEventInit
   extends EventInit {
   error: GPUError;
@@ -1930,9 +1945,7 @@ interface GPUCanvasContext {
   /**
    * The canvas this context was created from.
    */
-  readonly canvas:
-    | HTMLCanvasElement
-    | OffscreenCanvas;
+  readonly canvas: unknown;
   /**
    * Configures the context for this canvas.
    * This clears the drawing buffer to transparent black (in [$Replace the drawing buffer$]).
@@ -2402,7 +2415,7 @@ interface GPUDevice
   /**
    * An event handler IDL attribute for the {@link GPUDevice#uncapturederror} event type.
    */
-  onuncapturederror: EventHandler;
+  onuncapturederror: ((this: GPUDevice, ev: GPUUncapturedErrorEvent) => any) | null;
 }
 
 declare var GPUDevice: {
@@ -2475,7 +2488,7 @@ declare var GPUInternalError: {
   prototype: GPUInternalError;
   new (
     message: string
-  );
+  ): GPUInternalError;
 };
 
 interface GPUOutOfMemoryError
@@ -2492,7 +2505,7 @@ declare var GPUOutOfMemoryError: {
   prototype: GPUOutOfMemoryError;
   new (
     message: string
-  );
+  ): GPUOutOfMemoryError;
 };
 
 interface GPUPipelineError
@@ -2517,9 +2530,9 @@ interface GPUPipelineError
 declare var GPUPipelineError: {
   prototype: GPUPipelineError;
   new (
-    message?: string,
+    message: string | undefined,
     options: GPUPipelineErrorInit
-  );
+  ): GPUPipelineError;
 };
 
 interface GPUPipelineLayout
@@ -2955,7 +2968,7 @@ declare var GPUUncapturedErrorEvent: {
   new (
     type: string,
     gpuUncapturedErrorEventInitDict: GPUUncapturedErrorEventInit
-  );
+  ): GPUUncapturedErrorEvent;
 };
 
 interface GPUValidationError
@@ -2972,7 +2985,7 @@ declare var GPUValidationError: {
   prototype: GPUValidationError;
   new (
     message: string
-  );
+  ): GPUValidationError;
 };
 
 type WGSLLanguageFeatures =
@@ -3034,8 +3047,8 @@ interface Renderer {
   getPreferredFormat(): GPUTextureFormat
   getCurrentTexture(): GPUTexture
   getCurrentTextureView(): GPUTextureView
-  swap()
-  resize()
+  swap(): void
+  resize(): void
 }
 
 interface WebGPU {

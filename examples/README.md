@@ -14,10 +14,7 @@ Like the previous example, but renders directly to a window surface.
 
 ## [3. Creating a texture from an image](https://github.com/kmamal/gpu/tree/master/examples/03-texture-loading)
 
-Browsers create textures easily with `createImageBitmap()` and `device.queue.copyExternalImageToTexture()`.
-The Dawn Node.js bindings do not implement `device.queue.copyExternalImageToTexture()`, because Node.js has no standard image objects.
-Instead, we decode the image first and then create the texture with `device.queue.writeTexture()`.
-This example shows one of many ways to get a buffer of pixels from a file on disk.
+This example shows one of many ways to get a buffer of pixels from a file on disk and then onto a texture.
 It uses the `pngjs` package to decode a `.png` file and show it on the screen.
 
 
