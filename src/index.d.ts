@@ -25,7 +25,8 @@ type GPUFlagsConstant =
 type GPUImageCopyExternalImageSource =
 
     | GPUImageCopyExternalImagePixels
-    | GPUImageCopyExternalImageCanvas;
+    | GPUImageCopyExternalImageCanvas
+    | GPUImageCopyExternalImageVideo;
 type PredefinedColorSpace =
   | "srgb"
   | "display-p3";
@@ -801,6 +802,15 @@ interface GPUImageCopyExternalImageCanvas {
   } | null;
 }
 
+interface GPUImageCopyExternalImageVideoFrame
+  extends GPUImageCopyExternalImagePixels {
+  format?: "rgba";
+}
+
+interface GPUImageCopyExternalImageVideo {
+  readonly currentFrame: GPUImageCopyExternalImageVideoFrame | null;
+}
+
 interface GPUImageCopyExternalImage {
   /**
    * The source of the image copy. The copy source data is captured at the moment that
@@ -823,6 +833,10 @@ interface GPUImageCopyExternalImage {
    * <td>{@link GPUImageCopyExternalImageCanvas}
    * <td>{@link GPUImageCopyExternalImageCanvas#width|GPUImageCopyExternalImageCanvas.width}
    * <td>{@link GPUImageCopyExternalImageCanvas#height|GPUImageCopyExternalImageCanvas.height}
+   * <tr>
+   * <td>{@link GPUImageCopyExternalImageVideo}
+   * <td>{@link GPUImageCopyExternalImageVideoFrame#width|GPUImageCopyExternalImageVideo.currentFrame.width}
+   * <td>{@link GPUImageCopyExternalImageVideoFrame#height|GPUImageCopyExternalImageVideo.currentFrame.height}
    * </tbody>
    * </table>
    */

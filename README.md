@@ -117,7 +117,7 @@ After you call `device.destroy()`, the renderer releases its window surface, and
 
 The Dawn Node.js bindings do not implement [`GPUQueue.copyExternalImageToTexture()`](https://developer.mozilla.org/en-US/docs/Web/API/GPUQueue/copyExternalImageToTexture), because Node.js has no standard image objects.
 This is a useful function to have so this library does implement it by making some assumptions about the source.
-The source can be canvas-like or image-like:
+The source can be canvas-like, image-like, or video-like:
 
 - A canvas-like source must have `width` and `height` properties and also implement the `getContext('2d')` call and the `getImageData(x, y, w, h)` call.
 
@@ -126,6 +126,10 @@ The source can be canvas-like or image-like:
   If it has a `premultiplied` property that is `true`, as an `ImageBitmap` from `@kmamal/image` does when its alpha is premultiplied, the pixels are taken to be premultiplied; otherwise they are taken to be straight.
   A canvas-like source is always taken to be straight, because `getImageData()` returns straight alpha.
   The pixels are converted when the source and `premultipliedAlpha` disagree, and copied as they are when they agree.
+
+- A video-like source must have a `currentFrame` property.
+  The current frame is copied as an image-like source, so the copy size is bounded by the frame's `width` and `height`, and its pixels are taken to be straight unless it has `premultiplied: true`.
+  If there is no current frame yet, the call throws an `InvalidStateError`.
 
 The source `origin` can be either an array (`[x, y]`) or an object (`{x, y}`).
 The destination `origin` can be either an array (`[x, y, z]`) or an object (`{x, y, z}`).
