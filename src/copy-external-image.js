@@ -111,6 +111,17 @@ const resolveSource = (source) => {
 		throw new TypeError('source.source is not a supported image source')
 	}
 
+	if ('currentFrame' in source) {
+		const frame = source.currentFrame
+		if (frame === null || frame === undefined) {
+			throw new DOMException('source.source has no current frame', 'InvalidStateError')
+		}
+		if (frame.format !== undefined && frame.format !== 'rgba') {
+			throw new TypeError(`source.source frames are '${frame.format}', not 'rgba'`)
+		}
+		return resolveSource(frame)
+	}
+
 	if (isPixelArray(source.data) && isDimension(source.width) && isDimension(source.height)) {
 		const { width, height, data } = source
 		if (data.buffer.detached) {
@@ -122,6 +133,7 @@ const resolveSource = (source) => {
 		return {
 			width,
 			height,
+			premultiplied: source.premultiplied === true,
 			read: (x, y) => ({ data, stride: width * 4, offset: (y * width + x) * 4 }),
 		}
 	}
@@ -134,6 +146,7 @@ const resolveSource = (source) => {
 		return {
 			width: source.width,
 			height: source.height,
+			premultiplied: false,
 			read: (x, y, w, h) => {
 				const image = context.getImageData(x, y, w, h)
 				if (!image || !isPixelArray(image.data) || image.data.length < w * h * 4) {
@@ -177,7 +190,22 @@ const validateDestination = (texture) => {
 
 const isRgba8 = (format) => format.kind === 'u8' && format.bytesPerTexel === 4 && format.channels[0] === 0
 
-const encode = (format, pixels, width, height, flipY, premultiply) => {
+const PREMULTIPLY = 1
+const UNPREMULTIPLY = -1
+
+const unitValue = (value, alpha, conversion) => {
+	if (conversion === PREMULTIPLY) { return FLOAT_TABLE[value] * FLOAT_TABLE[alpha] }
+	if (conversion === UNPREMULTIPLY && alpha !== 0) { return Math.min(1, value / alpha) }
+	return FLOAT_TABLE[value]
+}
+
+const byteValue = (value, alpha, conversion) => {
+	if (conversion === PREMULTIPLY) { return Math.round(value * alpha / 255) }
+	if (conversion === UNPREMULTIPLY && alpha !== 0) { return Math.min(255, Math.round(value * 255 / alpha)) }
+	return value
+}
+
+const encode = (format, pixels, width, height, flipY, conversion) => {
 	const { bytesPerTexel, channels, kind } = format
 	const { data, stride, offset } = pixels
 	const numChannels = channels.length
@@ -188,7 +216,7 @@ const encode = (format, pixels, width, height, flipY, premultiply) => {
 	const f32 = kind === 'f32' ? new Float32Array(buffer) : null
 	const u32 = kind === 'rgb10a2' ? new Uint32Array(buffer) : null
 
-	const copyRows = !premultiply && isRgba8(format)
+	const copyRows = conversion === 0 && isRgba8(format)
 
 	for (let row = 0; row < height; row++) {
 		const srcRow = flipY ? height - 1 - row : row
@@ -207,32 +235,29 @@ const encode = (format, pixels, width, height, flipY, premultiply) => {
 				for (let i = 0; i < numChannels; i++) {
 					const channel = channels[i]
 					const value = data[src + channel]
-					u8[dst++] = premultiply && channel !== 3 ? Math.round(value * alpha / 255) : value
+					u8[dst++] = channel === 3 || alpha === 255 ? value : byteValue(value, alpha, conversion)
 				}
 			}
 			else if (kind === 'f16') {
 				for (let i = 0; i < numChannels; i++) {
 					const channel = channels[i]
 					const value = data[src + channel]
-					u16[dst++] = premultiply && channel !== 3 && alpha !== 255
-						? toHalf(FLOAT_TABLE[value] * FLOAT_TABLE[alpha])
-						: HALF_TABLE[value]
+					u16[dst++] = channel === 3 || alpha === 255 || conversion === 0
+						? HALF_TABLE[value]
+						: toHalf(unitValue(value, alpha, conversion))
 				}
 			}
 			else if (kind === 'f32') {
 				for (let i = 0; i < numChannels; i++) {
 					const channel = channels[i]
 					const value = data[src + channel]
-					f32[dst++] = premultiply && channel !== 3
-						? FLOAT_TABLE[value] * FLOAT_TABLE[alpha]
-						: FLOAT_TABLE[value]
+					f32[dst++] = channel === 3 ? FLOAT_TABLE[value] : unitValue(value, alpha, conversion)
 				}
 			}
 			else {
-				const scale = premultiply ? FLOAT_TABLE[alpha] : 1
-				const r = Math.round(FLOAT_TABLE[data[src]] * scale * 1023)
-				const g = Math.round(FLOAT_TABLE[data[src + 1]] * scale * 1023)
-				const b = Math.round(FLOAT_TABLE[data[src + 2]] * scale * 1023)
+				const r = Math.round(unitValue(data[src], alpha, conversion) * 1023)
+				const g = Math.round(unitValue(data[src + 1], alpha, conversion) * 1023)
+				const b = Math.round(unitValue(data[src + 2], alpha, conversion) * 1023)
 				const a = Math.round(FLOAT_TABLE[alpha] * 3)
 				u32[dst / 4] = (r | (g << 10) | (b << 20) | (a << 30)) >>> 0
 				dst += 4
@@ -306,13 +331,16 @@ const copyExternalImageToTexture = function (source, destination, copySize) {
 		return
 	}
 
+	let conversion = 0
+	if (premultipliedAlpha !== resolved.premultiplied) { conversion = premultipliedAlpha ? PREMULTIPLY : UNPREMULTIPLY }
+
 	const pixels = resolved.read(srcX, srcY, width, height)
-	if (!flipY && !premultipliedAlpha && isRgba8(format)) {
+	if (!flipY && conversion === 0 && isRgba8(format)) {
 		write(pixels.data, pixels.offset, pixels.stride)
 		return
 	}
 
-	const { data, bytesPerRow } = encode(format, pixels, width, height, flipY, premultipliedAlpha)
+	const { data, bytesPerRow } = encode(format, pixels, width, height, flipY, conversion)
 	write(data, 0, bytesPerRow)
 }
 

@@ -1,5 +1,6 @@
 /.github/
 /examples/
+/tests/
 /depot_tools/
 /dawn/
 /build/

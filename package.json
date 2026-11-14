@@ -27,7 +27,8 @@
     "make": "cd scripts && node make.mjs",
     "upload-release": "cd scripts && node upload-release.mjs",
     "release": "cd scripts && node release.mjs",
-    "clean": "cd scripts && node clean.mjs"
+    "clean": "cd scripts && node clean.mjs",
+    "test": "npx @kmamal/testing"
   },
   "config": {
     "depotTools": {
@@ -40,6 +41,7 @@
     }
   },
   "devDependencies": {
+    "@kmamal/testing": "0.0.34",
     "@types/node": "26.6.4",
     "node-addon-api": "8.9.2",
     "node-gyp": "13.1.0"

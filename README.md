@@ -123,6 +123,9 @@ The source can be canvas-like or image-like:
 
 - An image-like source must have `width`, `height`, and `data` properties.
   The `data` must be a `Uint8Array` or `Uint8ClampedArray` (a `Buffer` works too) of tightly packed RGBA pixels, 4 bytes per pixel, row by row.
+  If it has a `premultiplied` property that is `true`, as an `ImageBitmap` from `@kmamal/image` does when its alpha is premultiplied, the pixels are taken to be premultiplied; otherwise they are taken to be straight.
+  A canvas-like source is always taken to be straight, because `getImageData()` returns straight alpha.
+  The pixels are converted when the source and `premultipliedAlpha` disagree, and copied as they are when they agree.
 
 The source `origin` can be either an array (`[x, y]`) or an object (`{x, y}`).
 The destination `origin` can be either an array (`[x, y, z]`) or an object (`{x, y, z}`).
@@ -140,6 +143,3 @@ Its `dimension` must be `'2d'`, its `sampleCount` must be `1`, and its `format` 
 **Limitations:**
 
 - The only supported `colorSpace` is `'srgb'`.
-
-- The function always treats the source pixels as **not** premultiplied.
-  If the source already has premultiplied alpha and you pass `premultipliedAlpha: true`, the alpha gets applied _twice_.

@@ -783,6 +783,7 @@ interface GPUImageCopyExternalImagePixels {
   width: number;
   height: number;
   data: Uint8Array | Uint8ClampedArray;
+  premultiplied?: boolean;
 }
 
 interface GPUImageCopyExternalImageCanvas {
